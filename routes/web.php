@@ -28,3 +28,6 @@ Route::get('catalog', 'App\Http\Controllers\MainController@catalog');
 
 Route::get('admin', 'App\Http\Controllers\MainController@admin');
 
+Route::get('prelogin', 'App\Http\Controllers\MainController@prelogin');
+
+Route::post('login', 'App\Http\Controllers\MainController@dologin')->name('login');
