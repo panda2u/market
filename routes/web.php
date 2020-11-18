@@ -13,6 +13,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+/*
+| __________
+| default laravel welcome page
+| __________
 Route::get('/', function () {
     return view('welcome');
 });
+*/
+
+Route::get('/', 'App\Http\Controllers\MainController@index');
+
+Route::get('catalog', 'App\Http\Controllers\MainController@catalog');
+
+Route::get('admin', 'App\Http\Controllers\MainController@admin');
+
