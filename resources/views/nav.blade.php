@@ -13,7 +13,7 @@
             @if ($isadm == 1)
                 <a class="navbar-brand" href="{{url('')}}">[админ.: {{$name}}] Выйти</a>
             @else
-                <a class="navbar-brand" href="{{url('/admin')}}">Административная Панель</a>
+                <a class="navbar-brand" href="{{url('/pma')}}">Административная Панель</a>
             @endif
         </li>
     </ul>

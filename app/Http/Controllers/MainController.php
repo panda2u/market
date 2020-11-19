@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use App\Catalog;
+//use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
+//use App\User;
 class MainController extends Controller
 {
     public function index() {
@@ -29,21 +33,17 @@ class MainController extends Controller
         return view('prelogin')->with('isadm', $isadm);
     }
 
-    public function login() {
-        $isadm = 0;
-        return view('admin')->with('isadm', $isadm);
-    }
+//    public function login() {
+//        $isadm = 0;
+//        return view('admin')->with('isadm', $isadm);
+//    }
 
     public function dologin(Request $request) {
-        $isadm = 0;
         $name = $request->input('login');
         $pass = $request->input('password');
-
-        if ($name == 'panda2u' && $pass != '') {
-            $isadm = 1;
-            return view('admin')->with('isadm', $isadm)->with('name', $name); // представление с формой
-        }
-
-        return view('admin')->with('isadm', $isadm);
+        $db_searched_pass = User::first()->where('name', $name)->value('password');
+        //dd($is_correct_pass);
+        $isadm = Hash::check($pass, $db_searched_pass) ? 1 : 0;
+        return view('admin')->with('isadm', $isadm)->with('name', $name);
     }
 }
