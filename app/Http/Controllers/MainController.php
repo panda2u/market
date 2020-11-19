@@ -33,11 +33,6 @@ class MainController extends Controller
         return view('prelogin')->with('isadm', $isadm);
     }
 
-//    public function login() {
-//        $isadm = 0;
-//        return view('admin')->with('isadm', $isadm);
-//    }
-
     public function dologin(Request $request) {
         $name = $request->input('login');
         $pass = $request->input('password');

@@ -15,10 +15,10 @@ class UserTableSeeder extends Seeder
      */
     public function run()
     {
-        $uadmin = new User;
-        $uadmin->name = "admin";
-        $uadmin->email = "admin@fake.com";
-        $uadmin->password = Hash::make('123');
-        $uadmin->save();
+        $u = new User;
+        $u->name = "admin";
+        $u->email = "admin@fake.com";
+        $u->password = Hash::make('123');
+        $u->save();
     }
 }
