@@ -18,6 +18,7 @@ class UserTableSeeder extends Seeder
         $u = new User;
         $u->name = "admin";
         $u->email = "admin@fake.com";
+        $u->email_verified_at = date('Y-m-d h:i:s');
         $u->password = Hash::make('123');
         $u->save();
     }

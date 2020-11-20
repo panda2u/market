@@ -26,8 +26,12 @@ Route::get('/', 'App\Http\Controllers\MainController@index');
 
 Route::get('catalog', 'App\Http\Controllers\MainController@catalog');
 
-Route::get('admin', 'App\Http\Controllers\MainController@admin');
+Route::get('login', 'App\Http\Controllers\MainController@login');
 
-Route::get('prelogin', 'App\Http\Controllers\MainController@prelogin');
+Route::post('dashboard', 'App\Http\Controllers\MainController@dologin')->name('login');
 
-Route::post('login', 'App\Http\Controllers\MainController@dologin')->name('login');
+Route::get('dashboard', 'App\Http\Controllers\MainController@dashboard');
+
+Route::get('logout', 'App\Http\Controllers\MainController@logout');
+
+

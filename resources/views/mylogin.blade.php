@@ -1,18 +1,7 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Каталог</title>
-    <link rel="stylesheet" type="text/css" href="{{ \Illuminate\Support\Facades\URL::asset('css/app.css') }}">
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-
-    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-</head>
-@include('nav')
+@extends('layout')
+@section('titlesection')Войти
+@endsection
+@section('content')
 @if (Route::has('login'))
     <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
         @auth
@@ -27,13 +16,13 @@
     </div>
 @endif
 
-<div class="form">
+<div class="form container">
     <form class="form-horizontal" role="form" method="POST" action="{{ route('login') }}">{{ csrf_field() }}
         <div class="form-group">
             <div class="form-group">
-                <label for="inputEmail3" class="col-sm-2 control-label">Логин</label>
+                <label for="inputEmail3" class="col-sm-2 control-label">Email</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" placeholder="Логин" name="login">
+                    <input type="text" class="form-control" placeholder="Email" name="email">
                 </div>
             </div>
             <div class="form-group">
@@ -46,7 +35,7 @@
                 <div class="col-sm-offset-2 col-sm-10">
                     <div class="checkbox">
                         <label>
-                            <input type="checkbox" name="not_attach_ip"> Не прикреплять к IP (не безопасно)
+                            <input type="checkbox" name="remember"> Запомнить
                         </label>
                     </div>
                 </div>
@@ -59,3 +48,4 @@
         </div>
     </form>
 </div>
+@endsection

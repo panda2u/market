@@ -22,9 +22,10 @@ class GoodFactory extends Factory
      */
     public function definition()
     {
+        $name = $this->faker->name();
         return [
-            'name' => $this->faker->name,
-            'code' => $this->faker->slug(),
+            'name' => $name,
+            'code' => strtolower(str_replace(' ', '-', str_replace('.','', $name))),
             'image'=> $this->faker->image(),
             'price' => $this->faker->numberBetween(100, 2000),
         ];
