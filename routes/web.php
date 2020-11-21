@@ -28,7 +28,7 @@ Route::get('catalog', 'App\Http\Controllers\MainController@catalog');
 
 Route::get('login', 'App\Http\Controllers\MainController@login');
 
-Route::post('dashboard', 'App\Http\Controllers\MainController@dologin')->name('login');
+Route::post('dologin', 'App\Http\Controllers\MainController@dologin')->name('login');
 
 Route::get('dashboard', 'App\Http\Controllers\MainController@dashboard');
 

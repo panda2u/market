@@ -10,33 +10,46 @@
     </div>
     <table class="table table-striped table-dark">
         <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">First</th>
-            <th scope="col">Last</th>
-            <th scope="col">Handle</th>
+        <tr scope="row">
+            <th scope="col" class="index-id border border-white">id</th>
+            <th scope="col" class="w-25 border border-white">Название</th>
+            <th scope="col" class="mw-6em border border-white">Цена</th>
+            <th scope="col" class="border border-white">Фото</th>
+            <th scope="col" class="mw-15em border border-white">Действия</th>
         </tr>
         </thead>
         <tbody>
+        @foreach($goods as $good)
         <tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
+                <td class="border border-white">{{ $good->id }}</td>
+                <td class="border border-white">{{ $good->name }}</td>
+                <td class="border border-white">{{ $good->price }}</td>
+                <td class="border border-white">{{ $good->image }}</td>
+                <td class="py-1.5">
+                    <button class="btn p-0 small-button btn-warning">Изменить</button>
+                    <button class="btn p-0 small-button btn-danger">Удалить</button>
+                </td>
+        </tr>
+        @endforeach
+        <tr>
+                <td class="border border-white">1</td>
+                <td class="border border-white">Mark</td>
+                <td class="border border-white">Otto</td>
+                <td class="border border-white">@mdo</td>
+                <td class="py-1.5">
+                    <button class="btn p-0 small-button btn-warning">Изменить</button>
+                    <button class="btn p-0 small-button btn-danger">Удалить</button>
+                </td>
         </tr>
         <tr>
-            <th scope="row">2</th>
-            <td>Jacob</td>
-            <td>Thornton</td>
-            <td>@fat</td>
+                <td scope="row" class="border border-white">2</td>
+                <td class="border border-white">Jacob</td>
+                <td class="border border-white">Thornton</td>
+                <td class="border border-white">@fat</td>
+                <td class="border border-white">Btn1 Btn2</td>
         </tr>
-        <tr>
-            <th scope="row">3</th>
-            <td>Larry</td>
-            <td>the Bird</td>
-            <td>@twitter</td>
-        </tr>
+
         </tbody>
-    </table>
+    </table>        {{ $goods->links() }}
 </div>
 @endsection

@@ -2,33 +2,44 @@
 @section('titlesection')Войти
 @endsection
 @section('content')
-@if (Route::has('login'))
+
+
+<div class="form">
+    <form class="form-horizontal" role="form" method="POST" action="{{ route('login') }}">{{ csrf_field() }}
     <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
         @auth
-            <a href="{{ url('/admin') }}" class="text-sm text-gray-700 underline">Home</a>
+                <a href="{{ url('/dashboard') }}" class="text-sm text-gray-700 underline">Вы авторизованы как [ {{$name}} ]</a>
         @else
-            <a href="{{ route('login') }}" class="text-sm text-gray-700 underline">POST it to route('login')</a>
+                <span>Авторизуйтесь</span>
 
             @if (Route::has('register'))
-                <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 underline">Register</a>
+                    <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 underline">Зарегистрироваться</a>
             @endif
         @endif
     </div>
-@endif
-
-<div class="form container">
-    <form class="form-horizontal" role="form" method="POST" action="{{ route('login') }}">{{ csrf_field() }}
         <div class="form-group">
             <div class="form-group">
                 <label for="inputEmail3" class="col-sm-2 control-label">Email</label>
                 <div class="col-sm-10">
                     <input type="text" class="form-control" placeholder="Email" name="email">
+                    @error('email')
+                    {{$message}}
+                    @enderror
+                    @if ($e)
+                        {{ $e }}
+                    @endif
                 </div>
             </div>
             <div class="form-group">
                 <label for="inputPassword3" class="col-sm-2 control-label">Пароль</label>
                 <div class="col-sm-10">
                     <input type="password" class="form-control" placeholder="Пароль" name="password">
+                    @error('password')
+                    {{$message}}
+                    @enderror
+                    @if ($e)
+                        {{ $e }}
+                    @endif
                 </div>
             </div>
             <div class="form-group">

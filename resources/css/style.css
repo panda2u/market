@@ -53,6 +53,7 @@ a {
     text-decoration: none;
     outline: none;
 }
+
 a:hover {
     text-decoration: none;
 }
@@ -60,6 +61,7 @@ a:hover {
 .wrapper {
     min-width: 320px;
     min-height: 100vh;
+    margin: 0% .1em;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -84,11 +86,17 @@ a:hover {
 .container {
     max-width: 1100px;
     width: 100%;
+}
+
+.container {
+    max-width: 1100px;
+    width: 100%;
     margin-left: auto;
     margin-right: auto;
     padding-left: 20px;
     padding-right: 20px;
 }
+
 
 .column {
     padding-left: 15px;
@@ -285,4 +293,43 @@ svg:not(:root) {
     font-size: 18px;
     font-weight: bold;
     margin-top: 5px;
+}
+
+/*.wasd {
+wasd
+}*/
+
+.form {
+    max-width: 80%;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.index-id {
+    width: 6em;
+    max-width: 6em;
+}
+
+.small-button {
+    width: 6.2em;
+    max-width: 6.2em;
+    height: 2em;
+    max-height: 2em;
+}
+
+.padding-0 {
+    padding: 0px;
+}
+
+.mw-6em {
+    width: 6em;
+    max-width: 6em;
+}
+
+.mw-15em {
+    width: 15em;
+    max-width: 15em;
 }

@@ -1,4 +1,4 @@
-<div class="navbar navbar-expand-md navbar-dark bg-dark mb-4" role="navigation">
+<div class="navbar navbar-expand-md navbar-dark bg-dark" role="navigation">
     <a class="navbar-brand" href="{{url('')}}">Главная</a>
 
         <a class="navbar-brand" href="{{url('/catalog')}}">Каталог</a>
@@ -6,11 +6,12 @@
 
     <ul class="navbar-nav float-right">
         <li class="nav-item active">
-            @if ($isauth)
+            @auth
                 <a class="navbar-brand" href="{{url('logout')}}">[{{$name}}] Выйти</a>
             @else
                 <a class="navbar-brand" href="{{url('login')}}">[Войти]</a>
-            @endif
+            <!-- endif -->
+            @endauth
         </li>
     </ul>
 </div>

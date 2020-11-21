@@ -2,82 +2,75 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use Illuminate\Contracts\Auth\UserProvider;
+use App\Models\Good;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Redirect;
 
 class MainController extends Controller
 {
-    /**
-     * @var |null
-     */
-    private static $name;
     private function name_if_auth() {
         if (Auth::check()) {
-            MainController::$name = User::all()->where('id', Auth::id())->first()->value('name');
-            return MainController::$name;
+            return User::all()->where('id', Auth::id())->first()->value('name');
         } else { return null; }
     }
 
     public function index() {
         $name = MainController::name_if_auth();
-        return view('home')->with('isauth', $name != null)->with('name', $name ?? '');
+        return view('home')->with('isauth', $name != null)->with('name', $name ?? ''); //TODO: remove isauth.
     }
 
     public function catalog() {
         $name = MainController::name_if_auth();
-        return view('catalog')->with('isauth', $name != null)->with('name', $name ?? '');
+        return view('catalog')->with('isauth', $name != null)->with('name', $name ?? ''); //TODO: remove isauth.
     }
 
     public function login() {
-        $name = MainController::name_if_auth();
-        return view('mylogin')->with('isauth', $name != null)->with('name', $name ?? '');
+        return view('mylogin')->with('name', '')->with('e', null); //TODO: remove $e.
     }
 
     public function dologin(Request $request) {
+        $request->validate([
+            'email' => 'required|email','password' => 'required',
+        ]);
         $remember = $request->input('remember');
         $email = $request->input('email');//'admin@fake.com'
         $muser = User::all()->where('email', $email)->first();
         $pass = $request->input('password');
-        $db_hashed_pass = $muser->value('password');
-        $pass_correct = Hash::check($pass, $db_hashed_pass);
+        $pass_correct = Hash::check($pass, $muser->value('password'));
         $is_email_veryfied = $muser->value('email_verified_at') != null;
 
-        //$credentials = $request->only('email', 'password');
-        //if (Auth::attempt($credentials)) { // Authentication passed...
-        if ($pass_correct) { // Authentication passed...
+        if ($pass_correct) {
             $name = $muser->value('name');
             if ($is_email_veryfied) {
-                //dd($muser);
-                //Auth::login($request->user(), $remember != null); // 'on' for on
                 Auth::login($muser, $remember != null); // 'on' for on
-                //dd(Auth::check());
-                //Redirect::route('dashboard')->with('isadm', 1)->with('name', $name);
-                return redirect('dashboard')->with('$isauth', true)->with('name', $name);
+                return redirect('dashboard')->with('name', $name);
+            }
+            else {
+                $e = 'email не подтверждён';
+                return redirect('login')->with('name', '')->with('e', $e); //TODO: remove $e.
+            }
+        } else {
+            $e = 'пароль неверный';
+            return redirect('login')->with('name', '')->with('e', $e); //TODO: remove $e.
     }
-            else { echo "email не подтверждён";}
-        } else { echo "пароль неверный"; /*dd($muser);*/ }
     }
 
     public function logout () {
         Auth::logout();
-        //dd(Auth::check());
-
-        return redirect('/')->with('$isauth', false)->with('name', '');
+        return redirect('/')->with('name', '');
     }
 
     public function dashboard() {
-        //dd(Auth::check());
-        //dd(Auth::id());
-        if (Auth::check()) {
             $name = MainController::name_if_auth();
-            return view('dashboard')->with('isauth', $name != null)->with('name', $name ?? '');
+        //$goods = Good::all()->take(3);
+        $goods = DB::table('goods')->simplePaginate(10);
+        if ($name != null) {
+            return view('dashboard')->with('name', $name)->with('goods', $goods);
         } else {
-            return redirect('login')->with('$isauth', false)->with('name', '');
+            return redirect('login')->with('name', '');
     }
 
     }
