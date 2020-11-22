@@ -25,9 +25,7 @@
                     @error('email')
                     {{$message}}
                     @enderror
-                    @if ($e)
-                        {{ $e }}
-                    @endif
+
                 </div>
             </div>
             <div class="form-group">
@@ -37,9 +35,7 @@
                     @error('password')
                     {{$message}}
                     @enderror
-                    @if ($e)
-                        {{ $e }}
-                    @endif
+
                 </div>
             </div>
             <div class="form-group">

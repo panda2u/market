@@ -22,7 +22,7 @@ Route::get('/', function () {
 });
 */
 
-Route::get('/', 'App\Http\Controllers\MainController@index');
+Route::get('/', 'App\Http\Controllers\MainController@index')->name('home');
 
 Route::get('catalog', 'App\Http\Controllers\MainController@catalog');
 
@@ -34,4 +34,11 @@ Route::get('dashboard', 'App\Http\Controllers\MainController@dashboard');
 
 Route::get('logout', 'App\Http\Controllers\MainController@logout');
 
+/* Goods */
+
+Route::get('good/new', 'App\Http\Controllers\MainController@new_good');
+
+Route::post('good/create', 'App\Http\Controllers\MainController@create_good')->name('good.create');
+
+Route::get('goods/{good_id}', 'App\Http\Controllers\MainController@edit_good');
 

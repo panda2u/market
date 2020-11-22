@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use App\Models\Good;
 use Illuminate\Support\Facades\Auth;
@@ -11,24 +12,22 @@ use Illuminate\Http\Request;
 
 class MainController extends Controller
 {
-    private function name_if_auth() {
+    public static function name_if_auth() {
         if (Auth::check()) {
             return User::all()->where('id', Auth::id())->first()->value('name');
-        } else { return null; }
+        } else { return ''; }
     }
 
     public function index() {
-        $name = MainController::name_if_auth();
-        return view('home')->with('isauth', $name != null)->with('name', $name ?? ''); //TODO: remove isauth.
+        return view('home');
     }
 
     public function catalog() {
-        $name = MainController::name_if_auth();
-        return view('catalog')->with('isauth', $name != null)->with('name', $name ?? ''); //TODO: remove isauth.
+        return view('catalog');
     }
 
     public function login() {
-        return view('mylogin')->with('name', '')->with('e', null); //TODO: remove $e.
+        return view('mylogin')->with('e', null);
     }
 
     public function dologin(Request $request) {
@@ -46,33 +45,73 @@ class MainController extends Controller
             $name = $muser->value('name');
             if ($is_email_veryfied) {
                 Auth::login($muser, $remember != null); // 'on' for on
-                return redirect('dashboard')->with('name', $name);
+                return redirect('dashboard');
             }
             else {
                 $e = 'email не подтверждён';
-                return redirect('login')->with('name', '')->with('e', $e); //TODO: remove $e.
+                return redirect('login');
             }
         } else {
             $e = 'пароль неверный';
-            return redirect('login')->with('name', '')->with('e', $e); //TODO: remove $e.
+            return redirect('login');
     }
     }
 
     public function logout () {
         Auth::logout();
-        return redirect('/')->with('name', '');
+        return redirect('/');
     }
 
     public function dashboard() {
-            $name = MainController::name_if_auth();
         //$goods = Good::all()->take(3);
         $goods = DB::table('goods')->simplePaginate(10);
-        if ($name != null) {
-            return view('dashboard')->with('name', $name)->with('goods', $goods);
+        if (Auth::check()) {
+            return view('dashboard')->with('goods', $goods);
         } else {
-            return redirect('login')->with('name', '');
+            return redirect('login');
+        }
     }
 
+    /* Goods */
+    public function new_good () {
+        return view('goods.new_good');
     }
+ 
+    public function create_good (Request $request) { // POSTing
+        $name = $request->input('name');
+        $code = strtolower(str_replace(' ', '-', str_replace([".", "'"],'', $name)));
+        $price = $request->input('price');
 
+        $path = $request->file('image')->store('uploads', 'public');
+        //uploads/LwyemzeSuZaqcHZOW8by2rWIJSAqEcy1ta06NJCx.png
+        //dd($path);
+        $size = '2560x1440'; //TODO: upload image and get it width and height
+
+        $path_prefix = '/storage/';
+        $dt = date('Ymd-his'); // TODO: get local time
+
+        $image = $path_prefix.$dt.$name.$size;
+        //$a_new_good = new Good;
+
+        /*        $a_new_good->name = $name;
+                $a_new_good->code = $code;
+                $a_new_good->image = $image;
+                $a_new_good->price = $price;*/
+
+/*        $a_new_good->save([
+            'name' => $name,
+            'code' => $code,
+            'image' => $image,
+            'price' => $price,
+        ]);
+
+        $good_id = $a_new_good->id;
+        return redirect('goods.edit_good')->with('good_id', $good_id);*/
+        //return view('home')->with('path', $path); // testing
+     }
+ 
+    public function edit_good (Request $request) {
+        $good_id = substr($request->path(),strripos($request->path(), '/') + 1);
+        return view('goods.edit_good')->with('good_id', $good_id);
+    }
 }

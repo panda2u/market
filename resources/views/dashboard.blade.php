@@ -5,7 +5,14 @@
 <div class="wrapper">
     <div class="header">
         <div class="container">
+            <div class="row">
+                <div class="col">
             <h2>Административная Панель</h2>
+        </div>
+                <div class="col py-1 border border-black">
+                    <a href="{{ url('/good/new') }}"><button class="btn pt-0 pb-1 small-button" type="submit">+ Создать</button></a>
+                </div>
+            </div>
         </div>
     </div>
     <table class="table table-striped table-dark">
@@ -26,30 +33,14 @@
                 <td class="border border-white">{{ $good->price }}</td>
                 <td class="border border-white">{{ $good->image }}</td>
                 <td class="py-1.5">
-                    <button class="btn p-0 small-button btn-warning">Изменить</button>
-                    <button class="btn p-0 small-button btn-danger">Удалить</button>
+                    <a href="{{ url('/goods/'.$good->id) }}">
+                        <button class="btn pt-0 pb-1 small-button btn-warning">Изменить</button></a>
+                    <button class="btn pt-0 pb-1 small-button btn-danger">Удалить</button>
                 </td>
         </tr>
         @endforeach
-        <tr>
-                <td class="border border-white">1</td>
-                <td class="border border-white">Mark</td>
-                <td class="border border-white">Otto</td>
-                <td class="border border-white">@mdo</td>
-                <td class="py-1.5">
-                    <button class="btn p-0 small-button btn-warning">Изменить</button>
-                    <button class="btn p-0 small-button btn-danger">Удалить</button>
-                </td>
-        </tr>
-        <tr>
-                <td scope="row" class="border border-white">2</td>
-                <td class="border border-white">Jacob</td>
-                <td class="border border-white">Thornton</td>
-                <td class="border border-white">@fat</td>
-                <td class="border border-white">Btn1 Btn2</td>
-        </tr>
 
         </tbody>
-    </table>        {{ $goods->links() }}
+    </table>        <div class="text-center"> {{ $goods->links() }} </div>
 </div>
 @endsection
