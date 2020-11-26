@@ -7,7 +7,7 @@
     <ul class="navbar-nav float-right">
         <li class="nav-item active">
             @auth
-                <a class="navbar-brand" href="{{url('logout')}}">[{{$name}}] Выйти</a>
+                <a class="navbar-brand" href="{{url('logout')}}">[{{App\Models\User::all()->where('id', Auth::id())->first()->value('name')}}] Выйти</a>
             @else
                 <a class="navbar-brand" href="{{url('login')}}">[Войти]</a>
             <!-- endif -->

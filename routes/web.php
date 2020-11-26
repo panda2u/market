@@ -30,7 +30,7 @@ Route::get('login', 'App\Http\Controllers\MainController@login');
 
 Route::post('dologin', 'App\Http\Controllers\MainController@dologin')->name('login');
 
-Route::get('dashboard', 'App\Http\Controllers\MainController@dashboard');
+Route::get('dashboard', 'App\Http\Controllers\MainController@dashboard')->name('dashboard');
 
 Route::get('logout', 'App\Http\Controllers\MainController@logout');
 

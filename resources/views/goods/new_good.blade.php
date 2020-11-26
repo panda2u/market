@@ -37,7 +37,7 @@
         </div>
     </div>
 </form>
-<div class="text-center"><a href="{{ route('wipe') }}">
+<div class="text-center"><a href="{{ route('dashboard') }}">
     <button class="btn pt-0 pb-1 small-button">Очистить</button>
     </a></div>
 @endsection

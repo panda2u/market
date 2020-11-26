@@ -14,12 +14,13 @@ class MainController extends Controller
 {
     public static function name_if_auth() {
         if (Auth::check()) {
-            return User::all()->where('id', Auth::id())->first()->value('name');
+            return App\Models\User::all()->where('id', Auth::id())->first()->value('name');
         } else { return ''; }
     }
 
-    public function index() {
-        return view('home');
+    public function index(Request $request) {
+        $path = $request->session()->pull('path', 'default');
+        return view('home')->with('path', $path != 'default' ? $path : null);
     }
 
     public function catalog() {
@@ -54,7 +55,7 @@ class MainController extends Controller
         } else {
             $e = 'пароль неверный';
             return redirect('login');
-    }
+        }
     }
 
     public function logout () {
@@ -76,21 +77,24 @@ class MainController extends Controller
     public function new_good () {
         return view('goods.new_good');
     }
- 
+
     public function create_good (Request $request) { // POSTing
         $name = $request->input('name');
         $code = strtolower(str_replace(' ', '-', str_replace([".", "'"],'', $name)));
         $price = $request->input('price');
 
-        $path = $request->file('image')->store('uploads', 'public');
+        //$path = $request->file('image')->store('uploads', 'public');
+        $path = $request->file('image')->store('uploads');
         //uploads/LwyemzeSuZaqcHZOW8by2rWIJSAqEcy1ta06NJCx.png
         //dd($path);
         $size = '2560x1440'; //TODO: upload image and get it width and height
 
-        $path_prefix = '/storage/';
+        //$path_prefix = '/storage/';
         $dt = date('Ymd-his'); // TODO: get local time
 
-        $image = $path_prefix.$dt.$name.$size;
+        //$image = $path_prefix.$dt.$name.$size;
+
+        $image = $dt.$name.$size;
         //$a_new_good = new Good;
 
         /*        $a_new_good->name = $name;
@@ -98,18 +102,19 @@ class MainController extends Controller
                 $a_new_good->image = $image;
                 $a_new_good->price = $price;*/
 
-/*        $a_new_good->save([
-            'name' => $name,
-            'code' => $code,
-            'image' => $image,
-            'price' => $price,
-        ]);
+        /*        $a_new_good->save([
+                    'name' => $name,
+                    'code' => $code,
+                    'image' => $image,
+                    'price' => $price,
+                ]);
 
-        $good_id = $a_new_good->id;
-        return redirect('goods.edit_good')->with('good_id', $good_id);*/
-        //return view('home')->with('path', $path); // testing
-     }
- 
+                $good_id = $a_new_good->id;
+                return redirect('goods.edit_good')->with('good_id', $good_id);*/
+        $request->session()->flash('path', $path);
+        return redirect()->route('home'); // testing
+    }
+
     public function edit_good (Request $request) {
         $good_id = substr($request->path(),strripos($request->path(), '/') + 1);
         return view('goods.edit_good')->with('good_id', $good_id);
