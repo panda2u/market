@@ -18,4 +18,14 @@ class Size extends Model
     {
         return $this->belongsToMany('App\Material');
     }
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+        'code',
+    ];
 }

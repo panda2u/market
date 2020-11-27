@@ -28,15 +28,15 @@
         <tbody>
         @foreach($goods as $good)
         <tr>
-                <td class="border border-white">{{ $good->id }}</td>
-                <td class="border border-white">{{ $good->name }}</td>
-                <td class="border border-white">{{ $good->price }}</td>
-                <td class="border border-white">{{ $good->image }}</td>
-                <td class="py-1.5">
-                    <a href="{{ url('/goods/'.$good->id) }}">
-                        <button class="btn pt-0 pb-1 small-button btn-warning">Изменить</button></a>
-                    <button class="btn pt-0 pb-1 small-button btn-danger">Удалить</button>
-                </td>
+            <td class="border border-white">{{ $good->id }}</td>
+            <td class="border border-white">{{ $good->name }}</td>
+            <td class="border border-white">{{ $good->price }}</td>
+            <td class="border border-white">{{ $good->image }}</td>
+            <td class="py-1.5">
+                <a href="{{ url('/goods/'.$good->id) }}">
+                    <button class="btn pt-0 pb-1 small-button btn-warning">Изменить</button></a>
+                <button class="btn pt-0 pb-1 small-button btn-danger">Удалить</button>
+            </td>
         </tr>
         @endforeach
 

@@ -30,7 +30,7 @@ class GoodFactory extends Factory
         return [
             'name' => $name,
             'code' => $code,
-            'image'=> $path_prefix.$dt.$name.$size,
+            'image'=> $path_prefix.$dt.$code.$size,
             'price' => $this->faker->numberBetween(100, 2000),
         ];
     }

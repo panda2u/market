@@ -28,7 +28,7 @@ class MainController extends Controller
     }
 
     public function login() {
-        return view('mylogin')->with('e', null);
+        return view('mylogin');
     }
 
     public function dologin(Request $request) {
@@ -74,49 +74,53 @@ class MainController extends Controller
     }
 
     /* Goods */
-    public function new_good () {
-        return view('goods.new_good');
+
+    public function new_good (Request $request) {
+        $image_path = $request->session()->pull('image_path', 'default');
+        return view('goods.new_good')->with('image_path', $image_path);
     }
 
     public function create_good (Request $request) { // POSTing
-        $name = $request->input('name');
-        $code = strtolower(str_replace(' ', '-', str_replace([".", "'"],'', $name)));
-        $price = $request->input('price');
+        $request->validate([ 'image' => 'image|file', 'price' => 'integer' ]);
 
-        //$path = $request->file('image')->store('uploads', 'public');
-        $path = $request->file('image')->store('uploads');
-        //uploads/LwyemzeSuZaqcHZOW8by2rWIJSAqEcy1ta06NJCx.png
-        //dd($path);
-        $size = '2560x1440'; //TODO: upload image and get it width and height
+        $file_temp = $_FILES['image']['tmp_name'];
+        if (!$file_temp) {
+            $request->validate([ 'image' => 'required' ]);
+        }
 
-        //$path_prefix = '/storage/';
         $dt = date('Ymd-his'); // TODO: get local time
+        $good_price = $request->input('price') ?? 1000;
 
-        //$image = $path_prefix.$dt.$name.$size;
+        $good_name = $request->input('name') ?? $_FILES['image']['name'];
 
-        $image = $dt.$name.$size;
-        //$a_new_good = new Good;
+        $file_mime = str_replace('/', '.',
+            substr(getimagesize($file_temp)['mime'], strrpos($file_temp, '/') + 1));
+        $code = strtolower(str_replace(
+            ' ', '-', str_replace(
+            [".", "'"],'', $good_name)));
+        $dimens = getimagesize($_FILES['image']['tmp_name'])[0].'x'.getimagesize($_FILES['image']['tmp_name'])[1];
+        $good_image = $dt.$code.$dimens.$file_mime;
+        $image_path = 'storage/'.$request->file('image')->storeAs('uploads', $good_image);// real
 
-        /*        $a_new_good->name = $name;
-                $a_new_good->code = $code;
-                $a_new_good->image = $image;
-                $a_new_good->price = $price;*/
+        $request->session()->flash('image_path', $image_path);
 
-        /*        $a_new_good->save([
-                    'name' => $name,
-                    'code' => $code,
-                    'image' => $image,
-                    'price' => $price,
-                ]);
+        $new_good = new Good;
 
-                $good_id = $a_new_good->id;
-                return redirect('goods.edit_good')->with('good_id', $good_id);*/
-        $request->session()->flash('path', $path);
-        return redirect()->route('home'); // testing
+        $new_good->name = $good_name;
+        $new_good->code = $code;
+        $new_good->image = $image_path;
+        $new_good->price = $good_price;
+
+        $new_good->save();
+
+        $good_id = $new_good->id;
+        return redirect('goods/'.$good_id)->with('good_id', $good_id);
     }
 
     public function edit_good (Request $request) {
+        // url we arrived to
         $good_id = substr($request->path(),strripos($request->path(), '/') + 1);
-        return view('goods.edit_good')->with('good_id', $good_id);
+        $good = Good::where('id', $good_id)->first();
+        return view('goods.edit_good')->with('good', $good);
     }
 }
