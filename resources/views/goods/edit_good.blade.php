@@ -1,8 +1,11 @@
 @extends('layout')
-@section('titlesection')Создать
+@section('titlesection')Редактировать
 @endsection
 @section('content')
 <h2>Редактирование товара {{$good->id}} </h2>
+<h2>Размеры товара: {{$good->sizes()->pluck('name')->implode(', ')}} </h2>
+<h2>Материалы товара: {{$good->materials()->pluck('name')->implode(', ')}} </h2>
+
 <div class="form">
     <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="{{ route('good.create') }}">
         {{ csrf_field() }}
@@ -24,7 +27,7 @@
                     <input id="img2" type="file" class="form-control" placeholder="" name="image">
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label class="col-sm-2 control-label">Цена: ({{$good->price}})</label>
                 <div class="col-sm-10">
@@ -32,16 +35,16 @@
                 </div>
             </div>
 
-
-
-
-
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                     <button type="submit" class="btn btn-default btn-sm">Сохранить</button>
                 </div>
             </div>
         </div>
+    </form>
+
+        <a href="{{ url('/good/delete/'.$good->id) }}">
+            <button class="btn pt-0 pb-1 small-button btn-danger">Удалить</button></a>
     </form>
 </div>
 

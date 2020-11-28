@@ -20,7 +20,7 @@ class MaterialSeeder extends Seeder
             'satin' => 'микросатин',
             'poly' => 'полиэфирнохлопковая',
             'perkal' => 'перкаль',
-            'satin-zhkrd' => 'сатин-жаккард ',
+            'satin-zhkrd' => 'сатин-жаккард',
         ];
 
         foreach ($alls_izes as $key => $value) {

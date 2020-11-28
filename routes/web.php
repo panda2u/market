@@ -38,7 +38,16 @@ Route::get('logout', 'App\Http\Controllers\MainController@logout');
 
 Route::get('good/new', 'App\Http\Controllers\MainController@new_good');
 
-Route::post('good/create', 'App\Http\Controllers\MainController@create_good')->name('good.create');
-
 Route::get('goods/{good_id}', 'App\Http\Controllers\MainController@edit_good');
 
+Route::post('good/create', 'App\Http\Controllers\MainController@create_good')->name('good.create');
+
+Route::post('good/update/{good_id}', 'App\Http\Controllers\MainController@update_good')->name('good.update');
+
+Route::post('good/delete/{good_id}', 'App\Http\Controllers\MainController@delete_good')->name('good.delete');
+
+/* Properties */
+
+Route::get('properties', 'App\Http\Controllers\MainController@edit_props')->name('props');
+
+Route::post('update_props', 'App\Http\Controllers\MainController@update_props');

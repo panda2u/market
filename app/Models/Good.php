@@ -11,11 +11,11 @@ class Good extends Model
 
     public function materials()
     {
-        return $this->belongsToMany('App\Material');
+        return $this->belongsToMany('App\Models\Material', 'good_material');
     }
 
     public function sizes()
     {
-        return $this->belongsToMany('App\Size');
+        return $this->belongsToMany('App\Models\Size', 'good_size');
     }
 }
