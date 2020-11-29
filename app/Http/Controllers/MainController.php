@@ -11,6 +11,7 @@ use App\Models\Material;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use Illuminate\Support;
 
 class MainController extends Controller
 {
@@ -18,6 +19,60 @@ class MainController extends Controller
         if (Auth::check()) {
             return App\Models\User::all()->where('id', Auth::id())->first()->value('name');
         } else { return ''; }
+    }
+
+    public static function update_props_logic($del_list, $new_code, $new_name) {
+        // deleting
+        if ( $del_list['data'] != null) {
+            $current_model = null;
+            if ( $del_list['type'] == 'mat' ) {
+                $current_model = app(Material::class);
+            } elseif ( $del_list['type'] == 'size' ) {
+                $current_model = app(Size::class);
+            } else return;
+
+            foreach ($del_list['data'] as $item) {
+                //dd($item);
+                $current_data = $current_model::where('id', $item);
+                //dd($current_data);
+                if ($current_data->get('code')->first() != $new_code['data']
+                    && $current_data->get('name')->first() != $new_name['data']) {
+                        DB::table($current_model->getTable())->where('id', $item)->delete();
+                }
+            }
+        }
+
+        $current_model = null;
+
+        if ( ($new_name['type'] == 'mat' && $new_name['data'] != '') ||
+            ($new_code['type'] == 'mat' && $new_code['data'] != '') ) {
+            $current_model = app(Material::class);
+        }
+        elseif ( ($new_name['type'] == 'size' && $new_name['data'] != '') ||
+            ($new_code['type'] == 'size' && $new_code['data'] != '') ) {
+            $current_model = app(Size::class);
+        }
+
+        if ($current_model == null) return;
+
+        $search_by_name = $current_model->whereRaw("BINARY `name`= ?", [$new_name['data']])->first();
+        $search_by_code = $current_model->whereRaw("BINARY `code`= ?", [$new_code['data']])->first();
+
+        $update_code = $search_by_code == null && $search_by_name != null;
+        $update_name = $search_by_code != null && $search_by_name == null;
+        $insert = $search_by_code == null && $search_by_name == null;
+
+
+        if ( $insert ) {
+            $m = new $current_model;
+            $m->code = $new_code['data'];
+            $m->name = $new_name['data'];
+            $m->save();
+        } elseif ( $update_code ) {
+            $search_by_name->update(['code' => $new_code['data']]);
+        } elseif ( $update_name ) {
+            $search_by_code->update(['name' => $new_name['data']]);
+        }
     }
 
     public function index(Request $request) {
@@ -69,9 +124,7 @@ class MainController extends Controller
         $goods = DB::table('goods')->simplePaginate(10);
         if (Auth::check()) {
             return view('dashboard')->with('goods', $goods);
-        } else {
-            return redirect('login');
-        }
+        } else return redirect('login');
     }
 
     /* Goods */
@@ -80,10 +133,14 @@ class MainController extends Controller
         $image_path = $request->session()->pull('image_path', 'default') ?? '';
         $materials = Material::all();
         $sizes = Size::all();
-        //dd($sizes);
-
         return view('goods.new_good')->with('image_path', $image_path)
             ->with('materials', $materials)->with('sizes', $sizes);
+    }
+
+    public function show_good (Request $request) {
+        $good_id = substr($request->path(),strripos($request->path(), '/') + 1);
+        $good = Good::where('id', $good_id)->first();
+        return view('goods.show_good', ['good' => $good]);
     }
 
     public function create_good (Request $request) { // POST
@@ -120,38 +177,49 @@ class MainController extends Controller
 
         $new_good->materials()->attach($request->input('materials'));
         $new_good->sizes()->attach($request->input('sizes'));
-
-        return redirect('goods/'.$new_good->id);
+        return redirect()->route('good.edit', ['good_id' => $new_good->id]);
     }
 
-    public function edit_good (Request $request) { // shows 'edit good' page
+    public function edit_good ($good_id) { // shows 'edit good' page
+        if (Auth::check()) {
+            $good = Good::where('id', $good_id)->first();
+            return view('goods.edit_good')->with('good', $good);
+        } else return redirect('login');
+    }
 
-        $good_id = substr($request->path(),strripos($request->path(), '/') + 1);
+    public function update_good ($good_id) { // POST, good editing
         $good = Good::where('id', $good_id)->first();
-        return view('goods.edit_good')->with('good', $good);
-    }
-
-    public function update_good (Request $request) { // POST, good editing
-        $good = Good::where('id', substr($request->path(),strripos($request->path(), '/') + 1))->first();
         // updating...
         return view('goods.edit_good')->with('good', $good);
     }
 
-    public function delete_good (Request $request) { // POST
-        $good_id = substr($request->path(),strripos($request->path(), '/') + 1);
-        // pop-up 'are you sure you want to delete {good_id}?'
+    public function delete_good ($good_id) { // POST
+        // pop-up 'are you sure you want to delete {good_id}?' with real posting form'n'button
+        dd($good_id);
         dd(sprintf("are you sure you want to delete good_id %s?", $good_id));
     }
 
     /* Properties */
 
     public function edit_props () { // 'props'
-        return view('properties')
-            ->with('materials', Material::all())->with('sizes', Size::all());
+        if (Auth::check()) {
+            return view('properties')
+                ->with('materials', Material::all())->with('sizes', Size::all());
+        } else return redirect('login');
     }
 
     public function update_props (Request $request) { // POST
-        // updating...
-        return redirect('props');
+        $maters_to_del = ['type' => 'mat', 'data' => $request->input('materials')]; // data is array
+        $sizes_to_del = ['type' => 'size', 'data' => $request->input('sizes')]; // data is array
+        $mater_new_name = ['type' => 'mat', 'data' => $request->input('material-name') ?? ''];
+        $size_new_name = ['type' => 'size', 'data' => $request->input('size-name') ?? ''];
+        $mater_new_code = ['type' => 'mat', 'data' => Support\Str::slug(str_replace(['!',',','.','-','/','\\'],'_',
+            $request->input('material-code')),"_","ru")];
+        $size_new_code = ['type' => 'size', 'data' => Support\Str::slug(str_replace(['!',',','.','-','/','\\'],'_',
+            $request->input('size-code')),"_","ru")];
+        MainController::update_props_logic($maters_to_del, $mater_new_code, $mater_new_name);
+        MainController::update_props_logic($sizes_to_del, $size_new_code, $size_new_name);
+
+        return redirect()->route('props');
     }
 }

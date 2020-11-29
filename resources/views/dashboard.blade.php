@@ -11,11 +11,11 @@
         </div>
             <div class="row">
                 <div class="col py-1 border border-black">
-                    <a href="{{ url('/good/new') }}">
+                    <a href="{{ route('good.new') }}">
                         <button class="btn pt-0 pb-1" type="submit">+ Создать товар</button></a>
                 </div>
                 <div class="col py-1 border border-black">
-                    <a href="#">
+                    <a href="{{ route('props') }}">
                         <button class="btn pt-0 pb-1" type="submit">Группы свойств</button></a>
                 </div>
             </div>
@@ -39,7 +39,7 @@
             <td class="border border-white">{{ $good->price }}</td>
             <td class="border border-white">{{ $good->image }}</td>
             <td class="py-1.5 border border-white">
-                <a href="{{ url('/goods/'.$good->id) }}">
+                <a href="{{ route('good.edit', ['good_id' => $good->id]) }}">
                     <button class="btn pt-0 pb-1 small-button btn-warning">Изменить</button></a>
             </td>
         </tr>

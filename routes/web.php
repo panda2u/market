@@ -36,11 +36,13 @@ Route::get('logout', 'App\Http\Controllers\MainController@logout');
 
 /* Goods */
 
-Route::get('good/new', 'App\Http\Controllers\MainController@new_good');
-
-Route::get('goods/{good_id}', 'App\Http\Controllers\MainController@edit_good');
+Route::get('good/new', 'App\Http\Controllers\MainController@new_good')->name('good.new');
 
 Route::post('good/create', 'App\Http\Controllers\MainController@create_good')->name('good.create');
+
+Route::get('good/show/{good_id}', 'App\Http\Controllers\MainController@show_good')->name('good.show');
+
+Route::get('good/edit/{good_id}', 'App\Http\Controllers\MainController@edit_good')->name('good.edit');
 
 Route::post('good/update/{good_id}', 'App\Http\Controllers\MainController@update_good')->name('good.update');
 
