@@ -3,17 +3,6 @@
 @endsection
 @section('content')
 
-@isset($image_path)
-    @if($image_path != 'default')
-        <img class="img-fluid" src="{{ asset($image_path) }}"><br>
-        {{$image_path}}
-    @else
-        @error('image')
-            <span>{{$message}}</span>
-        @enderror
-    @endif
-@endisset
-
 <div class="wrapper">
     <div class="header">
         <div class="container">
@@ -28,7 +17,20 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">Имя</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" placeholder="Имя" name="name" required form="create-good">
+                        <input type="text" class="form-control" placeholder="Имя" name="name" form="create-good">
+                        @error('name')
+                        {{$message}}
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Код</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" placeholder="" name="code" form="create-good">
+                        @error('code')
+                        {{$message}}
+                        @enderror
                     </div>
                 </div>
 
@@ -36,6 +38,9 @@
                     <label class="col-sm-2 control-label">Цена</label>
                     <div class="col-sm-10">
                         <input class="form-control" placeholder="Цена" name="price" required form="create-good">
+                        @error('price')
+                        {{$message}}
+                        @enderror
                     </div>
                 </div>
 
@@ -43,6 +48,9 @@
                     <label class="col-sm-2 control-label">Фото</label>
                     <div class="col-sm-10">
                         <input type="file" class="form-control" placeholder="Фото" name="image" accept="image/*" form="create-good">
+                        @error('image')
+                        {{$message}}
+                        @enderror
                     </div>
                 </div>
 
@@ -76,15 +84,13 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <br>
-                    <div class="col-sm-2 col-sm-10">
-                        <a class="float-left col-md-3" href="{{ route('dashboard') }}">
-                            <button class="btn pt-0 pb-1 small-button">К списку</button></a>
-                        <button type="submit" class="float-left mr-4 col-md-3 btn pt-0 pb-1 small-button" form="create-good">Создать</button>
-                    </div>
-                </div>
+{{--                <div class="col-5 text-center border border-black float-right">
+                    <button type="submit" class="col-6 float-left btn pt-0 pb-1 small-button" form="create-good">Создать!</button>
+                </div>--}}
 
+                <div class="col-7 text-center border">
+                    <button type="submit" class="col-7 float-right btn pt-0 pb-1 small-button" form="create-good">Создать!</button>
+                </div>
             </form>
         </div>
     </div>

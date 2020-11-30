@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support;
+use Illuminate\Support\Facades\Validator;
 
 class MainController extends Controller
 {
@@ -75,6 +76,17 @@ class MainController extends Controller
         }
     }
 
+    public function validate_good_by_column_name($given_key) {
+        return Validator::make($given_key, [ array_key_first($given_key) =>
+            ['required', function ($attribute, $value, $fail) {
+                    if (Good::whereRaw("BINARY `".$attribute."` = ?", [$value])->first() != null) {
+                        $fail("[".$value."] ".__('validation.unique', [], Support\Facades\App::getLocale()));
+                    } else return true;
+                },
+            ],
+        ]);
+    }
+
     public function index(Request $request) {
         $path = $request->session()->pull('path', 'default');
         return view('home')->with('path', $path != 'default' ? $path : null);
@@ -121,7 +133,7 @@ class MainController extends Controller
     }
 
     public function dashboard() {
-        $goods = DB::table('goods')->simplePaginate(10);
+        $goods = Good::orderBy('id', 'desc')->simplePaginate(10);
         if (Auth::check()) {
             return view('dashboard')->with('goods', $goods);
         } else return redirect('login');
@@ -130,10 +142,9 @@ class MainController extends Controller
     /* Goods */
 
     public function new_good (Request $request) {
-        $image_path = $request->session()->pull('image_path', 'default') ?? '';
         $materials = Material::all();
         $sizes = Size::all();
-        return view('goods.new_good')->with('image_path', $image_path)
+        return view('goods.new_good')
             ->with('materials', $materials)->with('sizes', $sizes);
     }
 
@@ -143,60 +154,102 @@ class MainController extends Controller
         return view('goods.show_good', ['good' => $good]);
     }
 
-    public function create_good (Request $request) { // POST
-        $request->validate([ 'image' => 'image|file', 'price' => 'required|integer' ]);
-
+    public function do_create_update_good(Request $request, $good_id = null) {
+        $good = $good_id != null ? Good::where('id', $good_id)->first() : new Good;
+        $is_create = $good_id == null;
+        $dt = date('Ymd-his');
+        $request->validate([
+            'image' => 'image|file', 'price' => 'required|integer|min:96'
+        ]);
+        $good_price = $request->input('price');
+        $loaded_file = null;
         $file_temp = $_FILES['image']['tmp_name'];
-        if (!$file_temp) {
-            $request->validate([ 'image' => 'required' ]);
+        if ($file_temp == '') {
+            //$request->validate([ 'image' => 'required' ]);
+        } // if image should be required
+
+        if ($file_temp) { // file is loaded successfully
+            $dimensions = getimagesize($file_temp)[0].'x'.getimagesize($file_temp)[1];
+            $loaded_file = $this->sanitize_name($_FILES['image']['name']);
+            $file_mime = str_replace('/', '.',
+                substr(getimagesize($file_temp)['mime'], strrpos($file_temp, '/') + 1));
         }
 
-        $dt = date('Ymd-his');
-        $good_price = $request->input('price') ?? 1000;
+        $given_name = $request->input('name');
+        $name_validator = $this->validate_good_by_column_name(['name' => $given_name]);
+        if ($name_validator->fails() && $given_name != $good->name) { // name is_not_unique || is_empty
+            return back()->with('good_id', !$is_create ? $good->id : '')->withErrors($name_validator);
+        }
 
-        $good_name = $request->input('name') ?? $_FILES['image']['name'];
+        $code = $this->sanitize_name($request->input('name'));
+        if ($request->input('code') != '') {
+            $code = $this->sanitize_name($request->input('code'));
+        }
 
-        $file_mime = str_replace('/', '.',
-            substr(getimagesize($file_temp)['mime'], strrpos($file_temp, '/') + 1));
-        $code = strtolower(str_replace(
-            ' ', '-', str_replace(
-            [".", "'"],'', $good_name)));
-        $dimens = getimagesize($_FILES['image']['tmp_name'])[0].'x'.getimagesize($_FILES['image']['tmp_name'])[1];
-        $good_image = $dt.$code.$dimens.$file_mime;
-        $image_path = 'storage/'.$request->file('image')->storeAs('uploads', $good_image);// real
+        $given_code_validator = $this->validate_good_by_column_name(['code' => $code]);
+        if ($given_code_validator->fails() && ($code == '' || $code != $good->code)) {
+            // try set from 'name'input or from uploaded filename
+            $code = $file_temp != '' ? $loaded_file : $this->sanitize_name($request->input('name'));
+            $code_validator = $this->validate_good_by_column_name(['code' => $code]);
+            if ($code_validator->fails() && ($code == '' || $code != $good->code)) {
+                return back()->with('good_id', !$is_create ? $good->id : '')->withErrors($code_validator);
+            }
+        }
 
-        $request->session()->flash('image_path', $image_path);
+        $good->name = $given_name;
+        $good->code = $code;
+        $good->price = $good_price;
 
-        $new_good = new Good;
+        if (isset($dimensions) && $dimensions != null) {
+            $good_image = $dt.$code.$dimensions.$file_mime;
+            if (!$is_create && $good->image != '') { $this->remove_good_image_from_disk($good->id); }
+            $image_path = $request->file('image')->storeAs('uploads', $good_image, ['disk' => 'public']);
+            $good->image = 'storage/'.$image_path;
+        }
+        $good->save();
 
-        $new_good->name = $good_name;
-        $new_good->code = $code;
-        $new_good->image = $image_path;
-        $new_good->price = $good_price;
-        $new_good->save();
+        // relationships
+        //sync() : only the values from the given array will exist in the intermediate table
+        $good->materials()->sync($request->input('materials'));
+        $good->sizes()->sync($request->input('sizes'));
 
-        $new_good->materials()->attach($request->input('materials'));
-        $new_good->sizes()->attach($request->input('sizes'));
-        return redirect()->route('good.edit', ['good_id' => $new_good->id]);
+        return redirect()->route('good.edit', ['good_id' => $good->id]);
     }
 
-    public function edit_good ($good_id) { // shows 'edit good' page
+    public function edit_good (Request $request, $good_id) { // shows 'edit good' page
         if (Auth::check()) {
-            $good = Good::where('id', $good_id)->first();
-            return view('goods.edit_good')->with('good', $good);
+            if (!isset($good_id) || $good_id == null) {
+                $good_id = substr($request->path(),strripos($request->path(), '/') + 1);
+            }
+            $vars = $this->get_props_for_good($good_id);
+            return view('goods.edit_good', $vars);
         } else return redirect('login');
     }
 
-    public function update_good ($good_id) { // POST, good editing
+    public function create_good (Request $request) { // POST
+        return $this->do_create_update_good($request);
+    }
+
+    public function update_good (Request $request, $good_id) { // POST, good editing
+        return $this->do_create_update_good($request, $good_id);
+    }
+
+    public function remove_good_image_from_disk ($good_id) { // storage disk
         $good = Good::where('id', $good_id)->first();
-        // updating...
-        return view('goods.edit_good')->with('good', $good);
+        $path = str_replace('storage/', '', $good->image);
+        Storage::disk('public')->delete($path);
+        $good->image = '';
+        $good->save();
     }
 
     public function delete_good ($good_id) { // POST
-        // pop-up 'are you sure you want to delete {good_id}?' with real posting form'n'button
-        dd($good_id);
-        dd(sprintf("are you sure you want to delete good_id %s?", $good_id));
+        $good = Good::where('id', $good_id)->first();
+        $this->remove_good_image_from_disk($good->id);
+        // relationships
+        $good->materials()->detach();
+        $good->sizes()->detach();
+        $good->delete();
+        return redirect()->route('dashboard');
     }
 
     /* Properties */
@@ -217,9 +270,25 @@ class MainController extends Controller
             $request->input('material-code')),"_","ru")];
         $size_new_code = ['type' => 'size', 'data' => Support\Str::slug(str_replace(['!',',','.','-','/','\\'],'_',
             $request->input('size-code')),"_","ru")];
-        MainController::update_props_logic($maters_to_del, $mater_new_code, $mater_new_name);
-        MainController::update_props_logic($sizes_to_del, $size_new_code, $size_new_name);
+        $this->update_props_logic($maters_to_del, $mater_new_code, $mater_new_name);
+        $this->update_props_logic($sizes_to_del, $size_new_code, $size_new_name);
 
         return redirect()->route('props');
+    }
+
+    public function sanitize_name($input_val) {
+        $transliterator = \Transliterator::create('Russian-Latin/BGN; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();');
+        return strtolower(str_replace(' ','-',str_replace([".","'","ʹ"],'',$transliterator->transliterate($input_val))));
+    }
+
+
+    public function get_props_for_good($good_id) {
+        $good = Good::where('id', $good_id)->first();
+        $materials = Material::all();
+        $sizes = Size::all();
+        $good_size_ids = $good->sizes()->pluck('id')->toArray();
+        $good_material_ids = $good->materials()->pluck('id')->toArray();
+        return ['good' => $good, 'materials' => $materials, 'sizes' => $sizes,
+            'good_size_ids' => $good_size_ids, 'good_material_ids' => $good_material_ids];
     }
 }

@@ -15,9 +15,9 @@
                 <div class="float-right col-md-5 mx-4">
                     <div class="row">
                         <div class="filter-title">Удалить отмеченные размеры?</div>
-                        <input type="checkbox" onclick="ShowHideDiv(this)" value="" name="" id="sizes">
+                        <input type="checkbox" onclick="enabling(this)" value="" name="" id="sizes">
                         <script type="text/javascript">
-                            function ShowHideDiv() {
+                            function enabling() {
                                 let selector;
                                 if(this.event.target.id == "sizes") {
                                     selector = "#"+"del-" + this.event.target.id+" input"}
@@ -47,7 +47,7 @@
                 <div class="float-right col-md-5 mx-4">
                     <div class="row">
                         <div class="filter-title">Удалить отмеченные материалы?</div>
-                        <input type="checkbox" onclick="ShowHideDiv(this)" value="" name="" id="mats">
+                        <input type="checkbox" onclick="enabling(this)" value="" name="" id="mats">
                     </div>
                     <div id="del-mats" style="display: block" class="filter-content">
                         <ul>
