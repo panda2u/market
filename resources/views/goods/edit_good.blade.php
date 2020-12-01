@@ -56,9 +56,60 @@
                                 <div class="col-sm-10">
                                     <input id="img2" type="file" accept="image/*" class="form-control" placeholder="" name="image">
                                 </div>
+                                <div class="row col-7 mt-4 mr-3 pr-2 ml-auto">
+                                    @if($good->image != '')
+                                    <div class="col-9">
+                                        <div onclick="post_request(my_ok_callback)"
+                                        class="col-9 float-right btn pt-0 pb-1 small-button btn-danger">Удалить фото</div>
+                                    </div>
+                                        <script>
+                                            function my_ok_callback(response_code, responseText, url) {
+                                                console.log('eh url ' + url + '\nresponse_code ' + response_code + '\nresponseText' + responseText);
+                                                this.window.location.href = url;
+                                            }
+
+                                            function post_request(callback) {
+                                                let post_data = {
+                                                    _token: '{{csrf_token()}}',
+                                                    url: '{{url('/')}}' + '/image/delete/' + '{{$good->id}}',
+                                                    good_id: '{{$good->id}}',
+                                                };
+
+                                                let post_body;
+                                                let formed_url = this.window.location.href;
+
+                                                    post_body = ['\r\n'];
+                                                    post_body.push('Content-Disposition: form-data; name="good_id"\r\n\r\n'
+                                                        + post_data['good_id'] + '\r\n');
+
+                                                /* post request */
+                                                let xmlHttp = new XMLHttpRequest();
+                                                let boundary = String(Math.random()).slice(2);
+                                                let boundaryMiddle = '--' + boundary + '\r\n';
+                                                let boundaryLast = '--' + boundary + '--\r\n'
+
+                                                for (let key in post_data) {
+                                                    post_body.push('Content-Disposition: form-data; name="'
+                                                        + key + '"\r\n\r\n' + post_data[key] + '\r\n');
+                                                }
+
+                                                post_body = post_body.join(boundaryMiddle) + boundaryLast;
+                                                xmlHttp.onreadystatechange = function() {
+                                                    if (xmlHttp.readyState == 4)
+                                                        callback(xmlHttp.response.code, xmlHttp.responseText, formed_url);
+                                                }
+
+                                                xmlHttp.open("POST", post_data.url, true); // true for asynchronous
+                                                xmlHttp.setRequestHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
+                                                xmlHttp.send(post_body);
+                                            }
+                                        </script>
+                                    @endif
+                                </div>
                             </div>
+
                             @if($good->image != '')
-                            <label class="col-sm-8 ml-4 border border-black">{{asset($good->image)}}</label>
+                            <label class="col-sm-10 ml-4 border border-black">{{asset($good->image)}}</label>
                             @endif
 
                         </div>
@@ -120,11 +171,11 @@
                 {{ csrf_field() }}
 
 
+                <script> function confirm_delete(){document.getElementById("myPopup").classList.toggle("show");}</script>
                 <div class="col float-right">
-                    <div class="col-5 mr-auto btn pt-0 pb-1 small-button btn-danger" onclick="confirm_delete(this)">Удалить</div>
-                    <script> function confirm_delete(){document.getElementById("myPopup").classList.toggle("show");}</script>
+                    <div class="col-5 mr-auto pt-2 pb-0 btn btn-default btn-md btn-danger" onclick="confirm_delete(this)">Удалить товар</div>
                     <div class="pop_div col-7 float-right" id="myPopup">Подтвердите действие...
-                        <button class="pop_btn col-4 btn pt-0 pb-1 small-button btn-danger" type="submit" form="delete-good">Удалить!</button>
+                        <button class="pop_btn col-4 pt-0 pb-0 btn btn-default btn-md btn-danger" type="submit" form="delete-good">Удалить!</button>
                     </div>
                 </div>
 

@@ -11,7 +11,7 @@ class Material extends Model
 
     public function goods()
     {
-        return $this->belongsToMany('App\Good', 'good_material');
+        return $this->belongsToMany('App\Models\Good', 'good_material');
     }
 
     /**

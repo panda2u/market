@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Routing\UrlGenerator;
 
 class MainController extends Controller
 {
@@ -93,7 +94,37 @@ class MainController extends Controller
     }
 
     public function catalog() {
-        return view('catalog');
+        $materials = Material::all();
+        $sizes = Size::all();
+        $attached_materials = \App\Models\Material::has('goods')->pluck('id')->toArray();
+        $attached_sizes = \App\Models\Size::has('goods')->pluck('id')->toArray(); // array of ids
+        return view('catalog', [
+            'materials' => $materials,
+            'sizes' => $sizes,
+            'attached_materials' => $attached_materials,
+            'attached_sizes' => $attached_sizes,
+        ]);
+    }
+
+    public function filter_catalog(Request $request) {
+        //filter input sample
+        $request_all = [
+            "razmer" => [ '0' => "1_5" ], // optional key
+            "tkan" => [ '0' => "silk" ], // optional key
+            "priceFrom" => [ '0' => "148" ], // optional key
+            "priceTo" => [ '0' => "1703" ], // optional key
+            "_token" => "XNI6syT7VgY60Q64NtiNpGfyLorGBopOzhkfJIdD",
+            "url" => "http://lowercost/catalog?razmer=1_5,&tkan=silk,&priceFrom=148,&priceTo=1703",
+        ];
+
+        //TODO: call DB
+        /*return view('catalog', [
+            'materials' => $materials,
+            'sizes' => $sizes,
+            'attached_materials' => $attached_materials,
+            'attached_sizes' => $attached_sizes,
+        ]);*/
+        return $request->all();//return url()->previous();
     }
 
     public function login() {
@@ -202,7 +233,7 @@ class MainController extends Controller
 
         if (isset($dimensions) && $dimensions != null) {
             $good_image = $dt.$code.$dimensions.$file_mime;
-            if (!$is_create && $good->image != '') { $this->remove_good_image_from_disk($good->id); }
+            if (!$is_create && $good->image != '') { $this->delete_image($good->id); }
             $image_path = $request->file('image')->storeAs('uploads', $good_image, ['disk' => 'public']);
             $good->image = 'storage/'.$image_path;
         }
@@ -234,7 +265,7 @@ class MainController extends Controller
         return $this->do_create_update_good($request, $good_id);
     }
 
-    public function remove_good_image_from_disk ($good_id) { // storage disk
+    public function delete_image ($good_id) { // storage disk
         $good = Good::where('id', $good_id)->first();
         $path = str_replace('storage/', '', $good->image);
         Storage::disk('public')->delete($path);
@@ -244,7 +275,7 @@ class MainController extends Controller
 
     public function delete_good ($good_id) { // POST
         $good = Good::where('id', $good_id)->first();
-        $this->remove_good_image_from_disk($good->id);
+        $this->delete_image($good->id);
         // relationships
         $good->materials()->detach();
         $good->sizes()->detach();
@@ -277,10 +308,15 @@ class MainController extends Controller
     }
 
     public function sanitize_name($input_val) {
-        $transliterator = \Transliterator::create('Russian-Latin/BGN; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();');
-        return strtolower(str_replace(' ','-',str_replace([".","'","ʹ"],'',$transliterator->transliterate($input_val))));
+        $locale = Support\Facades\App::getLocale();
+        $translit_id = "Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();";
+        if ($locale == 'ru') {
+            $translit_id = 'Russian-Latin/BGN; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();';
+        }
+        $transliterator = \Transliterator::create($translit_id);
+        return strtolower(str_replace(' ','-',str_replace([".","'","ʹ"],'',
+            $transliterator->transliterate($input_val))));
     }
-
 
     public function get_props_for_good($good_id) {
         $good = Good::where('id', $good_id)->first();

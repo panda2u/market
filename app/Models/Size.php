@@ -11,7 +11,7 @@ class Size extends Model
 
     public function goods()
     {
-        return $this->belongsToMany('App\Good', 'good_size');
+        return $this->belongsToMany('App\Models\Good', 'good_size');
     }
 
     /**

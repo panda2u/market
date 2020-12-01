@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>@yield('titlesection')</title>
+    <title id="title_id">@yield('titlesection')</title>
     <link rel="stylesheet" type="text/css" href="{{ \Illuminate\Support\Facades\URL::asset('css/app.css') }}">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

@@ -26,6 +26,8 @@ Route::get('/', 'App\Http\Controllers\MainController@index')->name('home');
 
 Route::get('catalog', 'App\Http\Controllers\MainController@catalog');
 
+Route::post('filter', 'App\Http\Controllers\MainController@filter_catalog')->name('filter');
+
 Route::get('login', 'App\Http\Controllers\MainController@login');
 
 Route::post('dologin', 'App\Http\Controllers\MainController@dologin')->name('login');
@@ -47,6 +49,8 @@ Route::get('good/edit/{good_id}', 'App\Http\Controllers\MainController@edit_good
 Route::post('good/update/{good_id}', 'App\Http\Controllers\MainController@update_good')->name('good.update');
 
 Route::post('good/delete/{good_id}', 'App\Http\Controllers\MainController@delete_good')->name('good.delete');
+
+Route::post('image/delete/{good_id}', 'App\Http\Controllers\MainController@delete_image')->name('image.delete');
 
 /* Properties */
 
