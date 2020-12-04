@@ -199,12 +199,6 @@ class MainController extends Controller
             //$request->validate([ 'image' => 'required' ]);
         } // if image should be required
 
-        if ($file_temp) { // file is loaded successfully
-            $dimensions = getimagesize($file_temp)[0].'x'.getimagesize($file_temp)[1];
-            $loaded_file = $this->sanitize_name($_FILES['image']['name']);
-            $file_mime = str_replace('/', '.',
-                substr(getimagesize($file_temp)['mime'], strrpos($file_temp, '/') + 1));
-        }
 
         $given_name = $request->input('name');
         $name_validator = $this->validate_good_by_column_name(['name' => $given_name]);
@@ -230,6 +224,13 @@ class MainController extends Controller
         $good->name = $given_name;
         $good->code = $code;
         $good->price = $good_price;
+
+        if ($file_temp) { // file is loaded successfully
+            $dimensions = getimagesize($file_temp)[0].'x'.getimagesize($file_temp)[1];
+            $loaded_file = $this->sanitize_name($_FILES['image']['name']);
+            $file_mime = str_replace('/', '.',
+                substr(getimagesize($file_temp)['mime'], strrpos($file_temp, '/') + 1));
+        }
 
         if (isset($dimensions) && $dimensions != null) {
             $good_image = $dt.$code.$dimensions.$file_mime;

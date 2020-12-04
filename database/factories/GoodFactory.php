@@ -22,16 +22,16 @@ class GoodFactory extends Factory
      */
     public function definition()
     {
-        $name = $this->faker->name();
-        $code = strtolower(str_replace(' ', '-', str_replace([".", "'"],'', $name)));
-        $path_prefix = '/storage/';
-        $dt = date('Ymd-his'); // TODO: get local time
-        $size = '2560x1440'; //TODO: upload image and get it width and height
+        //$storage_path = \Illuminate\Support\Facades\App::storagePath();
+        //$needle = '/home/vagrant/code/laravel/storage/app/public/uploads';
+        //$replacement = 'storage/uploads';
+
+        //$name = $this->faker->name();
+        //$code = strtolower(str_replace(' ', '-', str_replace([".", "'"],'', $name)));
+
         return [
-            'name' => $name,
-            'code' => $code,
-            'image'=> $path_prefix.$dt.$code.$size,
             'price' => $this->faker->numberBetween(100, 2000),
+            //'image'=> str_replace($needle, $replacement, $this->faker->image($storage_path.'/app/public/uploads',250,250,null,true)),
         ];
     }
 }
