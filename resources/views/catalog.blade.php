@@ -20,12 +20,12 @@
                             <div class="filter-content">
                                 <ul class="filter-list">
                                     @foreach($sizes as $size) {{-- all sizes --}}
-                                    @if(in_array($size->id, $attached_sizes)) {{-- attached ones ids --}}
-                                        <li>
-                                            <input onclick="filter(get_data_for_post())" type="checkbox" value="{{$size->code}}" name="razmer[]" id="filter-size-{{$size->id}}">
-                                            <label for="filter-size-{{$size->id}}">{{$size->name}}</label>
-                                        </li>
-                                    @endif
+                                        @if(in_array($size->id, $attached_sizes)) {{-- attached ones ids --}}
+                                            <li>
+                                                <input onclick="filter(get_data_for_post())" type="checkbox" value="{{$size->code}}" name="razmer[]" id="filter-size-{{$size->id}}">
+                                                <label for="filter-size-{{$size->id}}">{{$size->name}}</label>
+                                            </li>
+                                        @endif
                                     @endforeach
                                 </ul>
                             </div>
@@ -51,12 +51,49 @@
                             <div class="filter-title">Цена</div>
                             <div class="filter-content">
                                 <div class="price">
-                                    <input type="text" class="price-input ui-slider-min" value="0">
+                                    <input type="text" class="price-input ui-slider-min" id="min" value="0">
                                     <span class="price-sep"></span>
-                                    <input type="text" class="price-input ui-slider-max" value="2000">
+                                    <input type="text" class="price-input ui-slider-max" id="max" value="2000">
                                 </div>
                                 <div class="ui-slider"></div>
                                 <script type="text/javascript">
+                                    let typingTimer;                // timer identifier
+                                    let doneTypingInterval = 1500;  // time in ms, 1.5 second for example
+                                    let $input_min = $('#min');
+                                    let $input_max = $('#max');
+
+                                    document.getElementById('min').oninput = function() {
+                                        //on keyup, start the countdown
+                                        $input_min.on('keyup', function () {
+                                            clearTimeout(typingTimer);
+                                            typingTimer = setTimeout(done_typing_min, doneTypingInterval);
+                                        });
+
+                                        //on keydown, clear the countdown
+                                        $input_min.on('keydown', () => clearTimeout(typingTimer));
+
+                                        // finished typing
+                                        function done_typing_min() {
+                                            $('.ui-slider').slider( "values", 0, document.getElementById('min').value );
+                                        }
+                                    };
+
+                                    document.getElementById('max').oninput = function() {
+                                        //on keyup, start the countdown
+                                        $input_max.on('keyup', function () {
+                                            clearTimeout(typingTimer);
+                                            typingTimer = setTimeout(done_typing_max, doneTypingInterval);
+                                        });
+
+                                        //on keydown, clear the countdown
+                                        $input_max.on('keydown', () => clearTimeout(typingTimer));
+
+                                        // finished typing
+                                        function done_typing_max() {
+                                            $('.ui-slider').slider( "values", 1, document.getElementById('max').value );
+                                        }
+                                    };
+
                                     $('document').ready(
                                         function () {
                                             $('.ui-slider').slider({
@@ -73,8 +110,8 @@
                                                 },
                                                 change: function (event, ui) {
                                                     my_wait(500);
-                                                    if (!event.originalEvent) { return; }
-                                                    else filter(get_data_for_post());
+                                                    if (!event.originalEvent) { return; } else
+                                                        filter(get_data_for_post());
                                                 }
                                             });
                                         });
@@ -84,91 +121,37 @@
                         <!-- filter-item -->
                         <div class="filter-item">
                             <div class="filter-content">
-                                <button onclick="" class="btn fall">Сбросить фильтры</button>
+                                <button onclick="" class="btn" id="drop">Сбросить фильтры</button>
                                 <script type="text/javascript">
-
-                                $('.fall').ready().on('click', function() {
-                                    refresh();
-                                });
+                                    $('#drop').ready().on('click', function() {
+                                        drop_filter();
+                                    });
                                 </script>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="column col-9">
+                <div class="column col-9" id="filtered-goods">
                     <div class="columns">
                         <!--  -->
-                        <div class="column col-4">
-                            <div class="element">
-                                <div class="element-image">
-                                    <img src="https://avatars.mds.yandex.net/get-mpic/1923922/img_id3485673576547289781.jpeg/6hq" alt="">
-                                </div>
-                                <div class="element-title">
-                                    <a href="">КПБ Бязь "Angelina"</a>
-                                </div>
-                                <div class="element-price">770 ₽</div>
-                            </div>
-                        </div>
+                        @isset($goods)
+                            @foreach($goods as $index => $filter_part)
+                                @foreach($filter_part as $good)
+                                    <div class="column col-4">
+                                        <div class="element">
+                                            <div class="element-image">
+                                                <img src="{{$good->image}}" alt="{{$good->code}}">
+                                            </div>
+                                            <div class="element-title">
+                                                <a href="{{route('good.show', ['good_id' => $good->id])}}">{{$good->name}}</a>
+                                            </div>
+                                            <div class="element-price">{{$good->price}} ₽</div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @endisset
                         <!--  -->
-                        <div class="column col-4">
-                            <div class="element">
-                                <div class="element-image">
-                                    <img src="https://avatars.mds.yandex.net/get-mpic/1860966/img_id1637650940979850376.jpeg/6hq" alt="">
-                                </div>
-                                <div class="element-title">
-                                    <a href="">КПБ "Радуга" (бязь 125гр., нав. 70/70 1 шт.)</a>
-                                </div>
-                                <div class="element-price">770 ₽</div>
-                            </div>
-                        </div>
-                        <!--  -->
-                        <div class="column col-4">
-                            <div class="element">
-                                <div class="element-image">
-                                    <img src="https://avatars.mds.yandex.net/get-mpic/1642819/img_id4084633023519379720.jpeg/6hq" alt="">
-                                </div>
-                                <div class="element-title">
-                                    <a href="">КПБ страйп сатин "Мирослава" 1,5 сп.</a>
-                                </div>
-                                <div class="element-price">770 ₽</div>
-                            </div>
-                        </div>
-                        <!--  -->
-                        <div class="column col-4">
-                            <div class="element">
-                                <div class="element-image">
-                                    <img src="https://avatars.mds.yandex.net/get-mpic/2008455/img_id8334595496725266885.jpeg/6hq" alt="">
-                                </div>
-                                <div class="element-title">
-                                    <a href="">КПБ Бязь "Золотая стрекоза"</a>
-                                </div>
-                                <div class="element-price">770 ₽</div>
-                            </div>
-                        </div>
-                        <!--  -->
-                        <div class="column col-4">
-                            <div class="element">
-                                <div class="element-image">
-                                    <img src="https://avatars.mds.yandex.net/get-mpic/1687058/img_id4020855627421849641.jpeg/6hq" alt="">
-                                </div>
-                                <div class="element-title">
-                                    <a href="">КПБ пэ "Сказочный сон"</a>
-                                </div>
-                                <div class="element-price">770 ₽</div>
-                            </div>
-                        </div>
-                        <!--  -->
-                        <div class="column col-4">
-                            <div class="element">
-                                <div class="element-image">
-                                    <img src="https://avatars.mds.yandex.net/get-mpic/1864685/img_id3402628980077528742.jpeg/6hq" alt="">
-                                </div>
-                                <div class="element-title">
-                                    <a href="">КПБ страйп сатин "Мирослава" 1,5 сп.</a>
-                                </div>
-                                <div class="element-price">770 ₽</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -179,7 +162,7 @@
 <script type="text/javascript">
 
     /* Sets input values to empty / defaults */
-    function refresh() {
+    function drop_filter() {
         $('input[type=checkbox]').prop("checked", false );  /* clean up */
         $('.ui-slider').slider( "values", 0, 0 );
         $('.ui-slider').slider( "values", 1, 2000 );        /* not leads to slider.change */
@@ -188,8 +171,8 @@
         filter(get_data_for_post());                        /* start new filter */
     }
 
-    function my_ok_callback(response_code, responseText, url) {
-        console.log('\r\nresponseText' + responseText);
+    function my_ok_callback(response_data) {
+        document.getElementById('filtered-goods').innerHTML = response_data;
     }
 
     function my_wait(ms) {
@@ -227,7 +210,7 @@
     /* ON POPSTATE */
     window.onpopstate = function(event) {
         if (event.state === null) {
-            refresh();
+            drop_filter();
         }
         if (event.state) {
             let filter_data = event.state.filter_data;
@@ -321,6 +304,7 @@
         let boundary = String(Math.random()).slice(2);
         let boundaryMiddle = '--' + boundary + '\r\n';
         let boundaryLast = '--' + boundary + '--\r\n'
+        xmlHttp.responseType = 'document';
 
         for (let key in post_data) {
             post_body.push('Content-Disposition: form-data; name="'
@@ -329,8 +313,9 @@
 
         post_body = post_body.join(boundaryMiddle) + boundaryLast;
         xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == 4)
-                callback(xmlHttp.response.code, xmlHttp.responseText, formed_url);
+            if (xmlHttp.readyState == xmlHttp.DONE) {
+                callback(xmlHttp.responseXML.getElementById('filtered-goods').innerHTML);
+            }
         }
 
         xmlHttp.open("POST", post_url, true);

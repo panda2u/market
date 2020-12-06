@@ -24,7 +24,7 @@ Route::get('/', function () {
 
 Route::get('/', 'App\Http\Controllers\MainController@index')->name('home');
 
-Route::get('catalog', 'App\Http\Controllers\MainController@catalog');
+Route::get('catalog', 'App\Http\Controllers\MainController@catalog')->name('catalog');
 
 Route::post('filter', 'App\Http\Controllers\MainController@filter_catalog')->name('filter');
 

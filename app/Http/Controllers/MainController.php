@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Routing\UrlGenerator;
 
 class MainController extends Controller
 {
@@ -93,21 +92,18 @@ class MainController extends Controller
         return view('home')->with('path', $path != 'default' ? $path : null);
     }
 
-    public function catalog() {
-        $materials = Material::all();
-        $sizes = Size::all();
-        $attached_materials = \App\Models\Material::has('goods')->pluck('id')->toArray();
-        $attached_sizes = \App\Models\Size::has('goods')->pluck('id')->toArray(); // array of ids
+    public function catalog($goods = null) {
+        if ($goods == null) {$goods = [\App\Models\Good::get()->all()];}
         return view('catalog', [
-            'materials' => $materials,
-            'sizes' => $sizes,
-            'attached_materials' => $attached_materials,
-            'attached_sizes' => $attached_sizes,
+            'goods' => $goods,
+            'materials' => Material::all(),
+            'sizes' => Size::all(),
+            'attached_materials' => \App\Models\Material::has('goods')->pluck('id')->toArray(),
+            'attached_sizes' => \App\Models\Size::has('goods')->pluck('id')->toArray(), // array of ids
         ]);
     }
 
     public function filter_catalog(Request $request) {
-        //filter input sample
         $request_all = [
             "razmer" => [ '0' => "1_5" ], // optional key
             "tkan" => [ '0' => "silk" ], // optional key
@@ -115,16 +111,97 @@ class MainController extends Controller
             "priceTo" => [ '0' => "1703" ], // optional key
             "_token" => "XNI6syT7VgY60Q64NtiNpGfyLorGBopOzhkfJIdD",
             "url" => "http://lowercost/catalog?razmer=1_5,&tkan=silk,&priceFrom=148,&priceTo=1703",
-        ];
+        ];//filter input sample
+        $bundle = $request->all();
 
-        //TODO: call DB
-        /*return view('catalog', [
+        if (!array_key_exists('razmer', $bundle) && !array_key_exists('tkan', $bundle)
+            && !array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
+            return redirect()->route('catalog', ['goods' => [\App\Models\Good::get()->all()]]);
+        }
+
+        $materials = Material::all();
+        $sizes = Size::all();
+        $attached_materials = \App\Models\Material::has('goods')->pluck('id')->toArray();
+        $attached_sizes = \App\Models\Size::has('goods')->pluck('id')->toArray(); // array of ids
+
+        $filtered_goods = [];
+        //$filtered_goods = \App\Models\Good::get()->all(); //TODO: pop from here on described filter conditions
+
+        if (array_key_exists('razmer', $bundle) && array_key_exists('tkan', $bundle)) {
+            $merged_goods = [];
+            foreach ($bundle['tkan'] as $material_code) { // as 'poplin'
+                $material_good = \App\Models\Size::where('code', '=', $material_code)->first()->goods()
+                    ->get()->all();
+                if (!in_array($material_good, $merged_goods))
+                    array_push($merged_goods, $material_good);
+            }
+            foreach ($bundle['razmer'] as $size_code) {
+                $size_good = \App\Models\Material::where('code', '=', $size_code)->first()->goods()
+                    ->get()->all();
+                if (!in_array($size_good, $merged_goods))
+                    array_push($merged_goods, $size_good);
+            }
+            foreach ($merged_goods as $good) {
+                if (!in_array($good, $filtered_goods))
+                    array_push($filtered_goods, $good);
+            }
+        }
+
+        if (array_key_exists('razmer', $bundle) && !array_key_exists('tkan', $bundle)) {
+            foreach ($bundle['razmer'] as $code) { // as '1_5'
+                $good = \App\Models\Size::where('code', '=', $code)->first()->goods()->get()->all();
+                if (!in_array($good, $filtered_goods))
+                    array_push($filtered_goods, $good);
+            }
+        }
+
+        if (array_key_exists('tkan', $bundle) && !array_key_exists('razmer', $bundle)) {
+            foreach ($bundle['tkan'] as $code) { // as 'poplin'
+                $good = \App\Models\Material::where('code', '=', $code)->first()->goods()->get()->all();
+                if (!in_array($good, $filtered_goods))
+                    array_push($filtered_goods, $good);
+            }
+        }
+
+        if (array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
+            $good = \App\Models\Good::where('price', '>=', $bundle['priceFrom'][0])->get()->all();
+            if (!in_array($good, $filtered_goods)) {
+                array_push($filtered_goods, $good);
+            }
+        }
+
+        if (array_key_exists('priceTo', $bundle) && !array_key_exists('priceFrom', $bundle)) {
+            $good = \App\Models\Good::where('price', '<=', $bundle['priceTo'][0])->get()->all();
+            if (!in_array($good, $filtered_goods)) {
+                array_push($filtered_goods, $good);
+            }
+        }
+
+        if (array_key_exists('priceFrom', $bundle) && array_key_exists('priceTo', $bundle)) {
+            $good = \App\Models\Good::
+            where('price', '>=', $bundle['priceFrom'][0])
+                ->where('price', '<=', $bundle['priceTo'][0])->get()->all();
+            if (!in_array($good, $filtered_goods)) {
+                array_push($filtered_goods, $good);
+            }
+        }
+
+        if (!array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
+            $good = \App\Models\Good::
+            where('price', '>=', '0')
+                ->where('price', '<=', '2000')->get()->all();
+            if (!in_array($good, $filtered_goods)) {
+                array_push($filtered_goods, $good);
+            }
+        }
+
+        return view('catalog', [
+            'goods' => $filtered_goods,
             'materials' => $materials,
             'sizes' => $sizes,
             'attached_materials' => $attached_materials,
             'attached_sizes' => $attached_sizes,
-        ]);*/
-        return $request->all();//return url()->previous();
+        ]);
     }
 
     public function login() {
