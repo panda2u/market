@@ -26,7 +26,7 @@
         <tr scope="row">
             <th scope="col" class="mw-3em w-2em border border-white">id</th>
             <th scope="col" class="w-25 border border-white">Название</th>
-            <th scope="col" class="mw-6em border border-white">Цена</th>
+            <th scope="col" class="mw-6em border border-white">Свойства</th>
             <th scope="col" class="border border-white">Фото</th>
             <th scope="col" class="mw-5em border border-white">Действия</th>
         </tr>
@@ -36,7 +36,7 @@
         <tr>
             <td class="border border-white">{{ $good->id }}</td>
             <td class="border border-white">{{ $good->name }}</td>
-            <td class="border border-white">{{ $good->price }}</td>
+            <td class="border border-white">{{ $good->sizes()->get()->pluck('code')}}<br>{{$good->materials()->get()->pluck('code')}}</td>
             <td class="border border-white">{{ $good->image }}</td>
             <td class="py-1.5 border border-white">
                 <a href="{{ route('good.edit', ['good_id' => $good->id]) }}">

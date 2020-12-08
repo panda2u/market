@@ -93,7 +93,7 @@ class MainController extends Controller
     }
 
     public function catalog($goods = null) {
-        if ($goods == null) {$goods = [\App\Models\Good::get()->all()];}
+        if ($goods == null) {$goods = \App\Models\Good::all();}
         return view('catalog', [
             'goods' => $goods,
             'materials' => Material::all(),
@@ -103,100 +103,73 @@ class MainController extends Controller
         ]);
     }
 
-    public function filter_catalog(Request $request) {
-        $request_all = [
-            "razmer" => [ '0' => "1_5" ], // optional key
-            "tkan" => [ '0' => "silk" ], // optional key
-            "priceFrom" => [ '0' => "148" ], // optional key
-            "priceTo" => [ '0' => "1703" ], // optional key
-            "_token" => "XNI6syT7VgY60Q64NtiNpGfyLorGBopOzhkfJIdD",
-            "url" => "http://lowercost/catalog?razmer=1_5,&tkan=silk,&priceFrom=148,&priceTo=1703",
-        ];//filter input sample
-        $bundle = $request->all();
-
-        if (!array_key_exists('razmer', $bundle) && !array_key_exists('tkan', $bundle)
-            && !array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
-            return redirect()->route('catalog', ['goods' => [\App\Models\Good::get()->all()]]);
+    /**
+      * @param $bundle{Object} named array (request from client).
+     * @return array array of Good models.
+     */
+    public function get_filtered($bundle) {
+        $goods_with_sizes = [];
+        $goods_with_mtrls = [];
+        $goods = [];
+        if ( array_key_exists('razmer', $bundle ) ) {
+            $sizes = collect(\App\Models\Size::whereIn('code', $bundle['razmer'])->get());
+            foreach ($sizes as $size) { array_push($goods, $size->goods()->get()); } /* goods_with_sizes */
+            $goods = collect($goods)->flatten()->unique('id');
         }
+
+        if ( array_key_exists('tkan', $bundle) ) {
+            $goods_with_sizes = $goods != [] ? $goods : \App\Models\Good::with('sizes')->get();
+            /* $goods_with_sizes : collection of Goods got by size filter, all goods with any sizes ^^^ */
+
+            $mtrls = collect(\App\Models\Material::whereIn('code', $bundle['tkan'])->get());
+            foreach ($mtrls as $mtrl) { array_push($goods_with_mtrls, $mtrl->goods()->get()); } /* returns [] if [] is given */
+            $goods_with_mtrls = collect($goods_with_mtrls)->flatten()->unique('id');
+
+            $intersected = array_intersect($goods_with_sizes->pluck('id')->values()->toArray(),
+                $goods_with_mtrls->pluck('id')->values()->toArray());
+            $goods = collect($goods)->whereIn('id', $intersected)->all();
+        }
+
+        if ( (array_key_exists('priceFrom', $bundle) || array_key_exists('priceTo', $bundle)) ) {
+            $goods = $goods != [] ? $goods : \App\Models\Good::with('sizes')->get();
+            $goods_with_prices = collect( \App\Models\Good::whereBetween('price', [
+                    array_key_exists('priceFrom', $bundle) ? $bundle['priceFrom'][0] : '0',
+                    array_key_exists('priceTo', $bundle) ? $bundle['priceTo'][0] : '2000'
+                ])->get());
+            $intersected = array_intersect($goods->pluck('id')->values()->toArray(),
+                $goods_with_prices->pluck('id')->values()->toArray());
+            $goods = collect($goods)->whereIn('id', $intersected)->all();
+        }
+
+        $goods = collect($goods)
+            ->flatten()->unique('id')->all();
+
+        return $goods;
+    }
+
+    public function filter_catalog(Request $request) {
+        $bundle = $request->all();
+        $goods_to_display = [];
 
         $materials = Material::all();
         $sizes = Size::all();
         $attached_materials = \App\Models\Material::has('goods')->pluck('id')->toArray();
-        $attached_sizes = \App\Models\Size::has('goods')->pluck('id')->toArray(); // array of ids
+        $attached_sizes = \App\Models\Size::has('goods')->pluck('id')->toArray();
 
-        $filtered_goods = [];
-        //$filtered_goods = \App\Models\Good::get()->all(); //TODO: pop from here on described filter conditions
-
-        if (array_key_exists('razmer', $bundle) && array_key_exists('tkan', $bundle)) {
-            $merged_goods = [];
-            foreach ($bundle['tkan'] as $material_code) { // as 'poplin'
-                $material_good = \App\Models\Size::where('code', '=', $material_code)->first()->goods()
-                    ->get()->all();
-                if (!in_array($material_good, $merged_goods))
-                    array_push($merged_goods, $material_good);
-            }
-            foreach ($bundle['razmer'] as $size_code) {
-                $size_good = \App\Models\Material::where('code', '=', $size_code)->first()->goods()
-                    ->get()->all();
-                if (!in_array($size_good, $merged_goods))
-                    array_push($merged_goods, $size_good);
-            }
-            foreach ($merged_goods as $good) {
-                if (!in_array($good, $filtered_goods))
-                    array_push($filtered_goods, $good);
-            }
+        if (!array_key_exists('razmer', $bundle) && !array_key_exists('tkan', $bundle)
+            && !array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
+            return redirect()->route('catalog', ['goods' => Good::get()->all()]);
+        }
+        else {
+            $goods_to_display = $this->get_filtered($bundle);
         }
 
-        if (array_key_exists('razmer', $bundle) && !array_key_exists('tkan', $bundle)) {
-            foreach ($bundle['razmer'] as $code) { // as '1_5'
-                $good = \App\Models\Size::where('code', '=', $code)->first()->goods()->get()->all();
-                if (!in_array($good, $filtered_goods))
-                    array_push($filtered_goods, $good);
-            }
-        }
-
-        if (array_key_exists('tkan', $bundle) && !array_key_exists('razmer', $bundle)) {
-            foreach ($bundle['tkan'] as $code) { // as 'poplin'
-                $good = \App\Models\Material::where('code', '=', $code)->first()->goods()->get()->all();
-                if (!in_array($good, $filtered_goods))
-                    array_push($filtered_goods, $good);
-            }
-        }
-
-        if (array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
-            $good = \App\Models\Good::where('price', '>=', $bundle['priceFrom'][0])->get()->all();
-            if (!in_array($good, $filtered_goods)) {
-                array_push($filtered_goods, $good);
-            }
-        }
-
-        if (array_key_exists('priceTo', $bundle) && !array_key_exists('priceFrom', $bundle)) {
-            $good = \App\Models\Good::where('price', '<=', $bundle['priceTo'][0])->get()->all();
-            if (!in_array($good, $filtered_goods)) {
-                array_push($filtered_goods, $good);
-            }
-        }
-
-        if (array_key_exists('priceFrom', $bundle) && array_key_exists('priceTo', $bundle)) {
-            $good = \App\Models\Good::
-            where('price', '>=', $bundle['priceFrom'][0])
-                ->where('price', '<=', $bundle['priceTo'][0])->get()->all();
-            if (!in_array($good, $filtered_goods)) {
-                array_push($filtered_goods, $good);
-            }
-        }
-
-        if (!array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
-            $good = \App\Models\Good::
-            where('price', '>=', '0')
-                ->where('price', '<=', '2000')->get()->all();
-            if (!in_array($good, $filtered_goods)) {
-                array_push($filtered_goods, $good);
-            }
+        if ($goods_to_display == []) {
+            $goods_to_display = \App\Models\Good::all(); //TODO: paginate     /* show all, nothing to hide */
         }
 
         return view('catalog', [
-            'goods' => $filtered_goods,
+            'goods' => $goods_to_display,
             'materials' => $materials,
             'sizes' => $sizes,
             'attached_materials' => $attached_materials,

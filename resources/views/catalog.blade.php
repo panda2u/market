@@ -110,8 +110,7 @@
                                                 },
                                                 change: function (event, ui) {
                                                     my_wait(500);
-                                                    if (!event.originalEvent) { return; } else
-                                                        filter(get_data_for_post());
+                                                    filter(get_data_for_post());
                                                 }
                                             });
                                         });
@@ -135,20 +134,19 @@
                     <div class="columns">
                         <!--  -->
                         @isset($goods)
-                            @foreach($goods as $index => $filter_part)
-                                @foreach($filter_part as $good)
-                                    <div class="column col-4">
-                                        <div class="element">
-                                            <div class="element-image">
-                                                <img src="{{$good->image}}" alt="{{$good->code}}">
-                                            </div>
-                                            <div class="element-title">
-                                                <a href="{{route('good.show', ['good_id' => $good->id])}}">{{$good->name}}</a>
-                                            </div>
-                                            <div class="element-price">{{$good->price}} ₽</div>
+                            @foreach($goods as $good)
+                                <div class="column col-4">
+                                    <div class="element">
+                                        <div class="element-image">
+                                            <img src="{{$good->image}}" alt="{{$good->code}}">
                                         </div>
+                                        <div class="element-title">
+                                            <a href="{{route('good.show', ['good_id' => $good->id])}}">{{$good->name}}</a>
+                                        </div>
+                                        <div class="element">{{ $good->sizes()->get()->pluck('code')}}<br>{{$good->materials()->get()->pluck('code')}}</div>
+                                        <div class="element-price">{{$good->price}} ₽</div>
                                     </div>
-                                @endforeach
+                                </div>
                             @endforeach
                         @endisset
                         <!--  -->
@@ -172,7 +170,9 @@
     }
 
     function my_ok_callback(response_data) {
-        document.getElementById('filtered-goods').innerHTML = response_data;
+        if (response_data !== null)
+            document.getElementById('filtered-goods').innerHTML =
+                response_data.getElementById('filtered-goods').innerHTML;
     }
 
     function my_wait(ms) {
@@ -314,7 +314,7 @@
         post_body = post_body.join(boundaryMiddle) + boundaryLast;
         xmlHttp.onreadystatechange = function() {
             if (xmlHttp.readyState == xmlHttp.DONE) {
-                callback(xmlHttp.responseXML.getElementById('filtered-goods').innerHTML);
+                callback(xmlHttp.responseXML);
             }
         }
 
