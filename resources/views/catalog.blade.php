@@ -143,14 +143,17 @@
                                         <div class="element-title">
                                             <a href="{{route('good.show', ['good_id' => $good->id])}}">{{$good->name}}</a>
                                         </div>
-                                        <div class="element">{{ $good->sizes()->get()->pluck('code')}}<br>{{$good->materials()->get()->pluck('code')}}</div>
-                                        <div class="element-price">{{$good->price}} ₽</div>
+                                        <div class="text-right">{{ $good->sizes()->get()->pluck('name')->implode(', ')}}
+                                            <br>{{$good->materials()->get()->pluck('name')->implode(', ')}}</div>
+                                        <div class="element-price text-right mt-3">{{$good->price}} ₽</div>
                                     </div>
                                 </div>
                             @endforeach
+
                         @endisset
                         <!--  -->
                     </div>
+                    <div class="text-center"> {{ $goods->links() }} </div>
                 </div>
             </div>
         </div>

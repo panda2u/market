@@ -24,23 +24,30 @@
     <table class="table table-striped table-dark">
         <thead>
         <tr scope="row">
-            <th scope="col" class="mw-3em w-2em border border-white">id</th>
-            <th scope="col" class="w-25 border border-white">Название</th>
-            <th scope="col" class="mw-6em border border-white">Свойства</th>
-            <th scope="col" class="border border-white">Фото</th>
-            <th scope="col" class="mw-5em border border-white">Действия</th>
+            <th scope="col" class="col-05 border border-white">id</th>
+            <th scope="col" class="col-2 border border-white">Действия</th>
+            <th scope="col" class="col-3 border border-white">Название</th>
+            <th scope="col" class="col-2 border border-white">Размеры</th>
+            <th scope="col" class="col-2 border border-white">Материалы</th>
+            <th scope="col" class="col-3 border border-white">Фото</th>
         </tr>
         </thead>
         <tbody>
         @foreach($goods as $good)
         <tr>
             <td class="border border-white">{{ $good->id }}</td>
+            <td class="align-middle border border-white" >
+                <a href="{{ route('good.edit', ['good_id' => $good->id]) }}" style="text-decoration: none;">
+                    <div style="width: 12em;
+                        display:flex; flex-direction: column; height: 8em;"
+                         class="btn pt-0 pb-1 btn-warning">Редактировать</div>
+                </a>
+            </td>
             <td class="border border-white">{{ $good->name }}</td>
-            <td class="border border-white">{{ $good->sizes()->get()->pluck('code')}}<br>{{$good->materials()->get()->pluck('code')}}</td>
-            <td class="border border-white">{{ $good->image }}</td>
-            <td class="py-1.5 border border-white">
-                <a href="{{ route('good.edit', ['good_id' => $good->id]) }}">
-                    <button class="btn pt-0 pb-1 small-button btn-warning">Изменить</button></a>
+            <td class="border border-white">{{ $good->sizes()->get()->pluck('name')->implode(', ') }}</td>
+            <td class="border border-white">{{ $good->materials()->get()->pluck('name')->implode(', ') }}</td>
+            <td class="border border-white">
+                <div class=""><img style="width: 8em;" src="{{$good->image}}" alt="{{$good->code}}"></div>
             </td>
         </tr>
         @endforeach

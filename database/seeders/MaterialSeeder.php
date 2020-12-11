@@ -18,9 +18,9 @@ class MaterialSeeder extends Seeder
             'poplin' => 'поплин',
             'silk' => 'искусственный шелк',
             'satin' => 'микросатин',
-            'poly' => 'полиэфирнохлопковая',
+            'poly' => 'ПЭ',
             'perkal' => 'перкаль',
-            'satin-zhkrd' => 'сатин-жаккард',
+            'zhakkard' => 'жаккард',
         ];
 
         foreach ($alls_izes as $key => $value) {
