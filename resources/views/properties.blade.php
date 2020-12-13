@@ -66,22 +66,22 @@
 
             <div class="form-group">
                 <div class="form-group">
-                    <label for="" class="col-md-4 control-label">Добавить материал</label>
-                    <div class="col-sm-10">
-                        <input type="text" name="material-name" class="form-control" placeholder="Имя материала">
-                    </div>
-                    <div class="col-sm-10">
-                        <input type="text" name="material-code" class="form-control" placeholder="Код материала">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="" class="col-md-4 control-label">Добавить размер</label>
+                    <label for="" class="col-md-4 control-label">Добавить/обновить размер</label>
                     <div class="col-sm-10">
                         <input type="text" name="size-name" class="form-control" placeholder="Имя размера">
                     </div>
                     <div class="col-sm-10">
                         <input type="text" name="size-code" class="form-control" placeholder="Код размера">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="" class="col-md-4 control-label">Добавить/обновить материал</label>
+                    <div class="col-sm-10">
+                        <input type="text" name="material-name" class="form-control" placeholder="Имя материала">
+                    </div>
+                    <div class="col-sm-10">
+                        <input type="text" name="material-code" class="form-control" placeholder="Код материала">
                     </div>
                 </div>
 

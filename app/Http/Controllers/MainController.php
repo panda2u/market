@@ -22,7 +22,7 @@ class MainController extends Controller
         } else { return ''; }
     }
 
-    public static function update_props_logic($del_list, $new_code, $new_name) {
+    public static function do_update_props($del_list, $new_code, $new_name) {
         // deleting
         if ( $del_list['data'] != null) {
             $current_model = null;
@@ -63,7 +63,6 @@ class MainController extends Controller
         $update_name = $search_by_code != null && $search_by_name == null;
         $insert = $search_by_code == null && $search_by_name == null;
 
-
         if ( $insert ) {
             $m = new $current_model;
             $m->code = $new_code['data'];
@@ -74,6 +73,25 @@ class MainController extends Controller
         } elseif ( $update_name ) {
             $search_by_code->update(['name' => $new_name['data']]);
         }
+    }
+
+    public function delete_image ($good_id) { // storage disk
+        $good = Good::where('id', $good_id)->first();
+        $path = str_replace('storage/', '', $good->image);
+        Storage::disk('public')->delete($path);
+        $good->image = '';
+        $good->save();
+    }
+
+    public function sanitize_name($input_val) {
+        $locale = Support\Facades\App::getLocale();
+        $translit_id = "Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();";
+        if ($locale == 'ru') {
+            $translit_id = 'Russian-Latin/BGN; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();';
+        }
+        $transliterator = \Transliterator::create($translit_id);
+        return strtolower(str_replace(' ','-',str_replace([".","'","ʹ"],'',
+            $transliterator->transliterate($input_val))));
     }
 
     public function validate_good_by_column_name($given_key) {
@@ -90,6 +108,49 @@ class MainController extends Controller
     public function index(Request $request) {
         $path = $request->session()->pull('path', 'default');
         return view('home')->with('path', $path != 'default' ? $path : null);
+    }
+
+    public function login() {
+        return view('mylogin');
+    }
+
+    public function dologin(Request $request) {
+        $request->validate([
+            'email' => 'required|email','password' => 'required',
+        ]);
+        $remember = $request->input('remember');
+        $email = $request->input('email');//'admin@fake.com'
+        $muser = User::all()->where('email', $email)->first();
+        $pass = $request->input('password');
+        $pass_correct = Hash::check($pass, $muser->value('password'));
+        $is_email_veryfied = $muser->value('email_verified_at') != null;
+
+        if ($pass_correct) {
+            $name = $muser->value('name');
+            if ($is_email_veryfied) {
+                Auth::login($muser, $remember != null); // 'on' for on
+                return redirect('dashboard');
+            }
+            else {
+                $e = 'email не подтверждён';
+                return redirect('login');
+            }
+        } else {
+            $e = 'пароль неверный';
+            return redirect('login');
+        }
+    }
+
+    public function logout () {
+        Auth::logout();
+        return redirect('/');
+    }
+
+    public function dashboard() {
+        $goods = Good::orderBy('id', 'desc')->simplePaginate(10);
+        if (Auth::check()) {
+            return view('dashboard')->with('goods', $goods);
+        } else return redirect('login');
     }
 
     public function catalog($goods = null) { // GET
@@ -173,49 +234,6 @@ class MainController extends Controller
             'attached_materials' => $attached_materials,
             'attached_sizes' => $attached_sizes,
         ]);
-    }
-
-    public function login() {
-        return view('mylogin');
-    }
-
-    public function dologin(Request $request) {
-        $request->validate([
-            'email' => 'required|email','password' => 'required',
-        ]);
-        $remember = $request->input('remember');
-        $email = $request->input('email');//'admin@fake.com'
-        $muser = User::all()->where('email', $email)->first();
-        $pass = $request->input('password');
-        $pass_correct = Hash::check($pass, $muser->value('password'));
-        $is_email_veryfied = $muser->value('email_verified_at') != null;
-
-        if ($pass_correct) {
-            $name = $muser->value('name');
-            if ($is_email_veryfied) {
-                Auth::login($muser, $remember != null); // 'on' for on
-                return redirect('dashboard');
-            }
-            else {
-                $e = 'email не подтверждён';
-                return redirect('login');
-            }
-        } else {
-            $e = 'пароль неверный';
-            return redirect('login');
-        }
-    }
-
-    public function logout () {
-        Auth::logout();
-        return redirect('/');
-    }
-
-    public function dashboard() {
-        $goods = Good::orderBy('id', 'desc')->simplePaginate(10);
-        if (Auth::check()) {
-            return view('dashboard')->with('goods', $goods);
-        } else return redirect('login');
     }
 
     /* Goods */
@@ -314,14 +332,6 @@ class MainController extends Controller
         return $this->do_create_update_good($request, $good_id);
     }
 
-    public function delete_image ($good_id) { // storage disk
-        $good = Good::where('id', $good_id)->first();
-        $path = str_replace('storage/', '', $good->image);
-        Storage::disk('public')->delete($path);
-        $good->image = '';
-        $good->save();
-    }
-
     public function delete_good ($good_id) { // POST
         $good = Good::where('id', $good_id)->first();
         $this->delete_image($good->id);
@@ -347,24 +357,13 @@ class MainController extends Controller
         $mater_new_name = ['type' => 'mat', 'data' => $request->input('material-name') ?? ''];
         $size_new_name = ['type' => 'size', 'data' => $request->input('size-name') ?? ''];
         $mater_new_code = ['type' => 'mat', 'data' => Support\Str::slug(str_replace(['!',',','.','-','/','\\'],'_',
-            $request->input('material-code')),"_","ru")];
+            $this->sanitize_name($request->input('material-code'))),"_","ru")];
         $size_new_code = ['type' => 'size', 'data' => Support\Str::slug(str_replace(['!',',','.','-','/','\\'],'_',
-            $request->input('size-code')),"_","ru")];
-        $this->update_props_logic($maters_to_del, $mater_new_code, $mater_new_name);
-        $this->update_props_logic($sizes_to_del, $size_new_code, $size_new_name);
+            $this->sanitize_name($request->input('size-code'))),"_","ru")];
+        $this->do_update_props($maters_to_del, $mater_new_code, $mater_new_name);
+        $this->do_update_props($sizes_to_del, $size_new_code, $size_new_name);
 
         return redirect()->route('props');
-    }
-
-    public function sanitize_name($input_val) {
-        $locale = Support\Facades\App::getLocale();
-        $translit_id = "Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();";
-        if ($locale == 'ru') {
-            $translit_id = 'Russian-Latin/BGN; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();';
-        }
-        $transliterator = \Transliterator::create($translit_id);
-        return strtolower(str_replace(' ','-',str_replace([".","'","ʹ"],'',
-            $transliterator->transliterate($input_val))));
     }
 
     public function get_props_for_good($good_id) {
