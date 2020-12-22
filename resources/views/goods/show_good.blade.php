@@ -18,7 +18,7 @@
                 <div class="form-group row">
 
                     <div id="img1" class="float-left col">
-                        <img class="img-fluid" src="{{ asset($good->image) }}" alt="{{$good->image}}"><br>
+                        <img class="img-fluid" src="{{ url('uploads/'.$good->image) }}" alt="{{$good->image}}"><br>
                     </div>
 
                     <div class="float-left col">

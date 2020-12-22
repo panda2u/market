@@ -49,7 +49,7 @@
                         <div class="row pt-3">
 
                             @if($good->image != '')
-                            <img class="col-md-4 img-fluid" src="{{ asset($good->image) }}">
+                            <img class="col-md-4 img-fluid" src="{{ url('uploads/'.$good->image) }}" alt="{{$good->code}}">
                             @endif
                             <div class="col ml-auto">
                                 <label class="col control-label">Новое фото?</label>
@@ -109,7 +109,7 @@
                             </div>
 
                             @if($good->image != '')
-                            <label class="col-sm-10 ml-4 border border-black">{{asset($good->image)}}</label>
+                            <label class="col-sm-10 ml-4 border border-black">{{ url('uploads/'.$good->image) }}</label>
                             @endif
 
                         </div>

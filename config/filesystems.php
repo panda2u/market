@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DRIVER', 'local'),
+    'default' => env('FILESYSTEM_DRIVER', 'public'),
 
     /*
     |--------------------------------------------------------------------------
@@ -50,9 +50,19 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'root' => \Illuminate\Support\Facades\App::basePath().'/public_html/uploads',
+            'url' => env('APP_URL').'/uploads',
             'visibility' => 'public',
+	    'permissions' => [
+	        'file' => [
+		    'public' => 0664,
+		    'private' => 0600,
+	        ],
+	        'dir' => [
+                    'public' => 0775,
+                    'private' => 0700,
+                ],
+	    ],
         ],
 
         's3' => [
@@ -79,7 +89,7 @@ return [
     */
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        //public_path('storage') => storage_path('app/public_html'),
     ],
 
 ];

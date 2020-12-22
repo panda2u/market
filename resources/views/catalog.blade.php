@@ -138,7 +138,7 @@
                                 <div class="column col-4">
                                     <div class="element">
                                         <div class="element-image">
-                                            <img src="{{$good->image}}" alt="{{$good->code}}">
+                                            <img src="{{ url('uploads/'.$good->image) }}" alt="{{$good->code}}">
                                         </div>
                                         <div class="element-title">
                                             <a href="{{route('good.show', ['good_id' => $good->id])}}">{{$good->name}}</a>
@@ -153,7 +153,10 @@
                         @endisset
                         <!--  -->
                     </div>
-                    <div class="text-center"> {{ $goods->links() }} </div>
+                    <div class="text-center">
+                        @include('pagination', ['paginator' => $goods])
+                        <!--<div class=" mt-4">{{$url}}</div>-->
+		    </div>
                 </div>
             </div>
         </div>
@@ -171,6 +174,8 @@
         $('.ui-slider-max').val('2000');
         filter(get_data_for_post());                        /* start new filter */
     }
+    
+    //document.addEventListener("DOMContentLoaded", () => { console.log("DOM Content Loaded: "+"{{ $url }}"); });
 
     function my_ok_callback(response_data) {
         if (response_data !== null)
@@ -186,13 +191,27 @@
         } while (currentDate - date < milliseconds);
     }
 
+    class DataForPost {
+        constructor() {
+            this.razmer = [];
+            this.tkan = [];
+            this.priceFrom = [];
+            this.priceTo = [];
+            this.page = [];
+        }
+        
+        withPage(page_n) {
+            this.page.push(page_n);
+            return this;
+        }
+        
+        build() {
+            return this;
+        }
+    }
+
     function get_data_for_post() {
-        let collected_data = {
-            razmer : [],
-            tkan : [],
-            priceFrom : [],
-            priceTo : [],
-        };
+        let collected_data = new DataForPost();
 
         collected_data.priceFrom.push($('.ui-slider-min').val());
         collected_data.priceTo.push($('.ui-slider-max').val());
@@ -208,7 +227,6 @@
         });
         return collected_data;
     }
-
 
     /* ON POPSTATE */
     window.onpopstate = function(event) {
@@ -286,6 +304,14 @@
         if (filter_data.priceTo !== undefined) {
             bundle = add_to_request_by_type(
                 'priceTo', post_body, formed_url, filter_data.priceTo, filter_is_empty);
+            formed_url = bundle !== undefined ? bundle.url : formed_url;
+            post_body = bundle !== undefined ? bundle.body : post_body;
+            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
+        }
+        
+        if (filter_data.page !== undefined) {
+            bundle = add_to_request_by_type(
+                'page', post_body, formed_url, filter_data.page, filter_is_empty);
             formed_url = bundle !== undefined ? bundle.url : formed_url;
             post_body = bundle !== undefined ? bundle.body : post_body;
             filter_is_empty = bundle !== undefined ? bundle.is_empty : true;

@@ -41,18 +41,19 @@ class GoodTableSeeder extends Seeder
             $extension = '.png';
             $temp_name = $prefix.$l.$extension;
 
-            Storage::disk('public')->put($subfolder.$temp_name, file_get_contents($urls[$i]));
+            Storage::disk('public')->put($temp_name, file_get_contents($urls[$i]));
 
-            $mime = mime_content_type(Storage::path('uploads/'.$temp_name));
+            $mime = mime_content_type(\Illuminate\Support\Facades\App::basePath().'/public_html/uploads/'
+		.$temp_name);
             $extension = str_replace('/', '.', substr($mime, strrpos($mime, '/') + 1));
             $image_file_name = $prefix.$l.'.'.$extension;
 
-            Storage::disk('public')->move($subfolder.$temp_name, $subfolder.$image_file_name);
+            Storage::disk('public')->move($temp_name, $image_file_name);
 
             $good = Good::factory()->create([
                 'name' => $name,
                 'code' => $code,
-                'image'=> 'storage/'.$subfolder.$image_file_name,
+                'image'=> $image_file_name,
             ]);
 
             $good->materials()->attach($l);

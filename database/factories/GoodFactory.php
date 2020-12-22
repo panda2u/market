@@ -23,7 +23,7 @@ class GoodFactory extends Factory
     public function definition()
     {
         //$storage_path = \Illuminate\Support\Facades\App::storagePath();
-        //$needle = '/home/vagrant/code/laravel/storage/app/public/uploads';
+        //$needle = '/home/vagrant/code/laravel/storage/app/public_html/uploads';
         //$replacement = 'storage/uploads';
 
         //$name = $this->faker->name();
@@ -31,7 +31,7 @@ class GoodFactory extends Factory
 
         return [
             'price' => $this->faker->numberBetween(100, 2000),
-            //'image'=> str_replace($needle, $replacement, $this->faker->image($storage_path.'/app/public/uploads',250,250,null,true)),
+            //'image'=> str_replace($needle, $replacement, $this->faker->image($storage_path.'/app/public_html/uploads',250,250,null,true)),
         ];
     }
 }
