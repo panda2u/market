@@ -167,12 +167,7 @@
 
     /* Sets input values to empty / defaults */
     function drop_filter() {
-        $('input[type=checkbox]').prop("checked", false );  /* clean up */
-        $('.ui-slider').slider( "values", 0, 0 );
-        $('.ui-slider').slider( "values", 1, 2000 );        /* not leads to slider.change */
-        $('.ui-slider-min').val('0');
-        $('.ui-slider-max').val('2000');
-        filter(get_data_for_post());                        /* start new filter */
+        location = '{{url('/')}}' + '/' + 'catalog';
     }
     
     //document.addEventListener("DOMContentLoaded", () => { console.log("DOM Content Loaded: "+"{{ $url }}"); });
@@ -191,27 +186,14 @@
         } while (currentDate - date < milliseconds);
     }
 
-    class DataForPost {
-        constructor() {
-            this.razmer = [];
-            this.tkan = [];
-            this.priceFrom = [];
-            this.priceTo = [];
-            this.page = [];
-        }
-        
-        withPage(page_n) {
-            this.page.push(page_n);
-            return this;
-        }
-        
-        build() {
-            return this;
-        }
-    }
-
     function get_data_for_post() {
-        let collected_data = new DataForPost();
+        let collected_data = {
+            razmer: [],
+            tkan: [],
+            priceFrom: [],
+            priceTo: [],
+            page: []
+        };
 
         collected_data.priceFrom.push($('.ui-slider-min').val());
         collected_data.priceTo.push($('.ui-slider-max').val());
@@ -277,45 +259,18 @@
         let filter_is_empty = true;
         let bundle;
 
-        if (filter_data.razmer !== undefined) {
-            bundle = add_to_request_by_type(
-                'razmer', post_body, formed_url, filter_data.razmer, filter_is_empty); // true for the first call
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
+        for (let k in filter_data) {
+            if (filter_data[k] !== undefined && filter_data[k] != '' && filter_data[k] != '0' && filter_data[k] != '2000') {
+                console.log(k + filter_data[k]);
+                bundle = add_to_request_by_type(
+                    k, post_body, formed_url, filter_data[k], filter_is_empty);
+
+                formed_url = bundle !== undefined ? bundle.url : formed_url;
+                post_body = bundle !== undefined ? bundle.body : post_body;
+                filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
+            }
         }
 
-        if (filter_data.tkan !== undefined) {
-            bundle = add_to_request_by_type(
-                'tkan', post_body, formed_url, filter_data.tkan, filter_is_empty);
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
-
-        if (filter_data.priceFrom !== undefined) {
-            bundle = add_to_request_by_type(
-                'priceFrom', post_body, formed_url, filter_data.priceFrom, filter_is_empty);
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
-
-        if (filter_data.priceTo !== undefined) {
-            bundle = add_to_request_by_type(
-                'priceTo', post_body, formed_url, filter_data.priceTo, filter_is_empty);
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
-        
-        if (filter_data.page !== undefined) {
-            bundle = add_to_request_by_type(
-                'page', post_body, formed_url, filter_data.page, filter_is_empty);
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
         console.log('filter_is_empty as result ? ' + filter_is_empty);
 
         formed_url = formed_url.replace("&", "?");
@@ -335,21 +290,23 @@
         let boundaryLast = '--' + boundary + '--\r\n'
         xmlHttp.responseType = 'document';
 
-        for (let key in post_data) {
-            post_body.push('Content-Disposition: form-data; name="'
-                + key + '"\r\n\r\n' + post_data[key] + '\r\n');
-        }
-
-        post_body = post_body.join(boundaryMiddle) + boundaryLast;
-        xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == xmlHttp.DONE) {
-                callback(xmlHttp.responseXML);
+        if (post_body !== undefined) {
+            for (let key in post_data) {
+                post_body.push('Content-Disposition: form-data; name="'
+                    + key + '"\r\n\r\n' + post_data[key] + '\r\n');
             }
-        }
 
-        xmlHttp.open("POST", post_url, true);
-        xmlHttp.setRequestHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
-        xmlHttp.send(post_body);
+            post_body = post_body.join(boundaryMiddle) + boundaryLast;
+            xmlHttp.onreadystatechange = function() {
+                if (xmlHttp.readyState == xmlHttp.DONE) {
+                    callback(xmlHttp.responseXML);
+                }
+            }
+
+            xmlHttp.open("POST", post_url, true);
+            xmlHttp.setRequestHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
+            xmlHttp.send(post_body);
+        }
     }
 
     /**
@@ -361,7 +318,7 @@
      * @param {boolean} filter_is_empty - current filter state.
      * @return {Object} post_data_bundle object.
      */
-    function add_to_request_by_type(f_type, post_body, formed_url, /* [] */ field_values, filter_is_empty = false) {
+    function add_to_request_by_type(f_type, post_body, formed_url, field_values, filter_is_empty = false) {
         post_body = filter_is_empty ? ['\r\n'] : post_body;
         let post_data_bundle = {
             body: post_body,
@@ -376,19 +333,16 @@
 
         let is_not_default_price = field_values.every(conditions);
 
-        if (is_not_default_price)
+        if (is_not_default_price) {
             formed_url = formed_url.concat('&', f_type, '=');
 
-        field_values.forEach( (code) => { if (is_not_default_price)
-            formed_url = formed_url.concat(code, ',');
-        });
+            field_values.forEach( (code) => {
+                formed_url = formed_url.concat(code, ',');
+                post_body.push('Content-Disposition: form-data; name="' + f_type + '[]"\r\n\r\n' + code + '\r\n');
+            });
 
-        if (is_not_default_price)
             formed_url = formed_url.slice(0, -1);
-
-        field_values.forEach( (code) => { if (is_not_default_price)
-            post_body.push('Content-Disposition: form-data; name="' + f_type + '[]"\r\n\r\n' + code + '\r\n');
-        });
+        }
 
         post_data_bundle.body = post_body;
         post_data_bundle.url = formed_url;
