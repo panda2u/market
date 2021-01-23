@@ -290,7 +290,10 @@
         let boundaryLast = '--' + boundary + '--\r\n'
         xmlHttp.responseType = 'document';
 
-        if (post_body !== undefined) {
+        if (post_body === undefined) {
+            drop_filter(); return;
+        }
+        else {
             for (let key in post_data) {
                 post_body.push('Content-Disposition: form-data; name="'
                     + key + '"\r\n\r\n' + post_data[key] + '\r\n');

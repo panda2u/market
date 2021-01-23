@@ -108,9 +108,9 @@ class MainController extends Controller
     }
 
     public function wipe() {
-	if (Auth::check()) {
+        if (Auth::check()) {
             Artisan::call('migrate:refresh --seed');
-	}
+        }
     }
 
     public function index(Request $request) {
