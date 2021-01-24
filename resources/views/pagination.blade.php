@@ -14,24 +14,3 @@
     !!}
 </nav>
 @endif
-<script>
-function get_data_for_page_n(page_n) {
-    const d = new PostData().withPage(page_n).build(); alert(d.page + '\n' + d.priceFrom +'\n'+ d.priceTo);
-}
-
-class PostData {
-    constructor() {
-        this.priceFrom = ($('.ui-slider-min').val());
-        this.priceTo = ($('.ui-slider-max').val());
-    }
-    
-    withPage(page_num) {
-        this.page = page_num;
-        return this;
-    }
-    
-    build() {
-        return this;
-    }
-    
-}</script>

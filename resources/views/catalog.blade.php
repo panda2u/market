@@ -165,12 +165,30 @@
 @endsection
 <script type="text/javascript">
 
+    class PostData {
+        constructor() {
+            this.razmer = [];
+            this.tkan = [];
+            this.priceFrom = [($('.ui-slider-min').val())];
+            this.priceTo = [($('.ui-slider-max').val())];
+            this.page = [];
+        }
+        
+        withPage(page_num) {
+            this.page = [page_num];
+            return this;
+        }
+        
+        build() {
+            return this;
+        }
+        
+    }
+
     /* Sets input values to empty / defaults */
     function drop_filter() {
         location = '{{url('/')}}' + '/' + 'catalog';
     }
-    
-    //document.addEventListener("DOMContentLoaded", () => { console.log("DOM Content Loaded: "+"{{ $url }}"); });
 
     function my_ok_callback(response_data) {
         if (response_data !== null)
@@ -187,13 +205,7 @@
     }
 
     function get_data_for_post() {
-        let collected_data = {
-            razmer: [],
-            tkan: [],
-            priceFrom: [],
-            priceTo: [],
-            page: []
-        };
+        let collected_data = new PostData();
 
         collected_data.priceFrom.push($('.ui-slider-min').val());
         collected_data.priceTo.push($('.ui-slider-max').val());
@@ -245,17 +257,16 @@
      * Updates data bundle, page url and filter state before making (or not making) http-request .
      * @param {Object} filter_data - bundle object, accumulates filter data before request.
      * @param {boolean} from_popstate - does filter called by page input changes or by browser 'back' button.
-     * @param {function} callback
      */
-    function filter(filter_data, from_popstate = false, callback = my_ok_callback) {
+    function filter(filter_data, from_popstate = false) {
         let post_data = {
             _token: '{{csrf_token()}}',
             url: '{{url('/')}}' + '/',
         };
 
-        let post_body;
-        let post_url = post_data.url + 'filter';
+        const post_url = post_data.url + 'filter';
         let formed_url = post_data.url + 'catalog';
+        let post_body;
         let filter_is_empty = true;
         let bundle;
 
@@ -271,45 +282,44 @@
             }
         }
 
-        console.log('filter_is_empty as result ? ' + filter_is_empty);
-
         formed_url = formed_url.replace("&", "?");
         post_data.url = formed_url;
-        console.log('formed_url!\n' + formed_url);
 
         if (!from_popstate) // if called not from browser window history, push
             push_state({
-                url : formed_url,
-                filter_data : filter_data,
+                url: formed_url,
+                filter_data: filter_data,
             }, formed_url);
-
-        /* post request */
-        let xmlHttp = new XMLHttpRequest();
-        let boundary = String(Math.random()).slice(2);
-        let boundaryMiddle = '--' + boundary + '\r\n';
-        let boundaryLast = '--' + boundary + '--\r\n'
-        xmlHttp.responseType = 'document';
 
         if (post_body === undefined) {
             drop_filter(); return;
         }
-        else {
-            for (let key in post_data) {
-                post_body.push('Content-Disposition: form-data; name="'
-                    + key + '"\r\n\r\n' + post_data[key] + '\r\n');
-            }
 
-            post_body = post_body.join(boundaryMiddle) + boundaryLast;
-            xmlHttp.onreadystatechange = function() {
-                if (xmlHttp.readyState == xmlHttp.DONE) {
-                    callback(xmlHttp.responseXML);
-                }
-            }
+        else { send_request(post_data, post_body); }
+    }
 
-            xmlHttp.open("POST", post_url, true);
-            xmlHttp.setRequestHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
-            xmlHttp.send(post_body);
+    function send_request(data, body, url = '{{url('/')}}' + '/filter') {
+        let xmlHttp = new XMLHttpRequest();
+        const boundary = String(Math.random()).slice(2);
+        const boundaryMiddle = '--' + boundary + '\r\n';
+        const boundaryLast = '--' + boundary + '--\r\n'
+        xmlHttp.responseType = 'document';
+
+        for (let key in data) {
+            body.push('Content-Disposition: form-data; name="'
+                + key + '"\r\n\r\n' + data[key] + '\r\n');
         }
+
+        body = body.join(boundaryMiddle) + boundaryLast;
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == xmlHttp.DONE) {
+                my_ok_callback(xmlHttp.responseXML);
+            }
+        }
+
+        xmlHttp.open("POST", url, true);
+        xmlHttp.setRequestHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
+        xmlHttp.send(body);
     }
 
     /**
