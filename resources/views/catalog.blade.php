@@ -138,7 +138,7 @@
                                 <div class="column col-4">
                                     <div class="element">
                                         <div class="element-image">
-                                            <img src="{{$good->image}}" alt="{{$good->code}}">
+                                            <img src="{{ url('uploads/'.$good->image) }}" alt="{{$good->code}}">
                                         </div>
                                         <div class="element-title">
                                             <a href="{{route('good.show', ['good_id' => $good->id])}}">{{$good->name}}</a>
@@ -153,7 +153,10 @@
                         @endisset
                         <!--  -->
                     </div>
-                    <div class="text-center"> {{ $goods->links() }} </div>
+                    <div class="text-center">
+                        @include('pagination', ['paginator' => $goods])
+                        <!--<div class=" mt-4">{{$url}}</div>-->
+		    </div>
                 </div>
             </div>
         </div>
@@ -162,14 +165,29 @@
 @endsection
 <script type="text/javascript">
 
+    class PostData {
+        constructor() {
+            this.razmer = [];
+            this.tkan = [];
+            this.priceFrom = [($('.ui-slider-min').val())];
+            this.priceTo = [($('.ui-slider-max').val())];
+            this.page = [];
+        }
+        
+        withPage(page_num) {
+            this.page = [page_num];
+            return this;
+        }
+        
+        build() {
+            return this;
+        }
+        
+    }
+
     /* Sets input values to empty / defaults */
     function drop_filter() {
-        $('input[type=checkbox]').prop("checked", false );  /* clean up */
-        $('.ui-slider').slider( "values", 0, 0 );
-        $('.ui-slider').slider( "values", 1, 2000 );        /* not leads to slider.change */
-        $('.ui-slider-min').val('0');
-        $('.ui-slider-max').val('2000');
-        filter(get_data_for_post());                        /* start new filter */
+        location = '{{url('/')}}' + '/' + 'catalog';
     }
 
     function my_ok_callback(response_data) {
@@ -187,12 +205,7 @@
     }
 
     function get_data_for_post() {
-        let collected_data = {
-            razmer : [],
-            tkan : [],
-            priceFrom : [],
-            priceTo : [],
-        };
+        let collected_data = new PostData();
 
         collected_data.priceFrom.push($('.ui-slider-min').val());
         collected_data.priceTo.push($('.ui-slider-max').val());
@@ -208,7 +221,6 @@
         });
         return collected_data;
     }
-
 
     /* ON POPSTATE */
     window.onpopstate = function(event) {
@@ -245,85 +257,69 @@
      * Updates data bundle, page url and filter state before making (or not making) http-request .
      * @param {Object} filter_data - bundle object, accumulates filter data before request.
      * @param {boolean} from_popstate - does filter called by page input changes or by browser 'back' button.
-     * @param {function} callback
      */
-    function filter(filter_data, from_popstate = false, callback = my_ok_callback) {
+    function filter(filter_data, from_popstate = false) {
         let post_data = {
             _token: '{{csrf_token()}}',
             url: '{{url('/')}}' + '/',
         };
 
-        let post_body;
-        let post_url = post_data.url + 'filter';
+        const post_url = post_data.url + 'filter';
         let formed_url = post_data.url + 'catalog';
+        let post_body;
         let filter_is_empty = true;
         let bundle;
 
-        if (filter_data.razmer !== undefined) {
-            bundle = add_to_request_by_type(
-                'razmer', post_body, formed_url, filter_data.razmer, filter_is_empty); // true for the first call
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
+        for (let k in filter_data) {
+            if (filter_data[k] !== undefined && filter_data[k] != '' && filter_data[k] != '0' && filter_data[k] != '2000') {
+                console.log(k + filter_data[k]);
+                bundle = add_to_request_by_type(
+                    k, post_body, formed_url, filter_data[k], filter_is_empty);
 
-        if (filter_data.tkan !== undefined) {
-            bundle = add_to_request_by_type(
-                'tkan', post_body, formed_url, filter_data.tkan, filter_is_empty);
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
-
-        if (filter_data.priceFrom !== undefined) {
-            bundle = add_to_request_by_type(
-                'priceFrom', post_body, formed_url, filter_data.priceFrom, filter_is_empty);
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
-
-        if (filter_data.priceTo !== undefined) {
-            bundle = add_to_request_by_type(
-                'priceTo', post_body, formed_url, filter_data.priceTo, filter_is_empty);
-            formed_url = bundle !== undefined ? bundle.url : formed_url;
-            post_body = bundle !== undefined ? bundle.body : post_body;
-            filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
-        }
-        console.log('filter_is_empty as result ? ' + filter_is_empty);
-
-        formed_url = formed_url.replace("&", "?");
-        post_data.url = formed_url;
-        console.log('formed_url!\n' + formed_url);
-
-        if (!from_popstate) // if called not from browser window history, push
-            push_state({
-                url : formed_url,
-                filter_data : filter_data,
-            }, formed_url);
-
-        /* post request */
-        let xmlHttp = new XMLHttpRequest();
-        let boundary = String(Math.random()).slice(2);
-        let boundaryMiddle = '--' + boundary + '\r\n';
-        let boundaryLast = '--' + boundary + '--\r\n'
-        xmlHttp.responseType = 'document';
-
-        for (let key in post_data) {
-            post_body.push('Content-Disposition: form-data; name="'
-                + key + '"\r\n\r\n' + post_data[key] + '\r\n');
-        }
-
-        post_body = post_body.join(boundaryMiddle) + boundaryLast;
-        xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == xmlHttp.DONE) {
-                callback(xmlHttp.responseXML);
+                formed_url = bundle !== undefined ? bundle.url : formed_url;
+                post_body = bundle !== undefined ? bundle.body : post_body;
+                filter_is_empty = bundle !== undefined ? bundle.is_empty : true;
             }
         }
 
-        xmlHttp.open("POST", post_url, true);
+        formed_url = formed_url.replace("&", "?");
+        post_data.url = formed_url;
+
+        if (!from_popstate) // if called not from browser window history, push
+            push_state({
+                url: formed_url,
+                filter_data: filter_data,
+            }, formed_url);
+
+        if (post_body === undefined) {
+            drop_filter(); return;
+        }
+
+        else { send_request(post_data, post_body); }
+    }
+
+    function send_request(data, body, url = '{{url('/')}}' + '/filter') {
+        let xmlHttp = new XMLHttpRequest();
+        const boundary = String(Math.random()).slice(2);
+        const boundaryMiddle = '--' + boundary + '\r\n';
+        const boundaryLast = '--' + boundary + '--\r\n'
+        xmlHttp.responseType = 'document';
+
+        for (let key in data) {
+            body.push('Content-Disposition: form-data; name="'
+                + key + '"\r\n\r\n' + data[key] + '\r\n');
+        }
+
+        body = body.join(boundaryMiddle) + boundaryLast;
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == xmlHttp.DONE) {
+                my_ok_callback(xmlHttp.responseXML);
+            }
+        }
+
+        xmlHttp.open("POST", url, true);
         xmlHttp.setRequestHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
-        xmlHttp.send(post_body);
+        xmlHttp.send(body);
     }
 
     /**
@@ -335,7 +331,7 @@
      * @param {boolean} filter_is_empty - current filter state.
      * @return {Object} post_data_bundle object.
      */
-    function add_to_request_by_type(f_type, post_body, formed_url, /* [] */ field_values, filter_is_empty = false) {
+    function add_to_request_by_type(f_type, post_body, formed_url, field_values, filter_is_empty = false) {
         post_body = filter_is_empty ? ['\r\n'] : post_body;
         let post_data_bundle = {
             body: post_body,
@@ -350,19 +346,16 @@
 
         let is_not_default_price = field_values.every(conditions);
 
-        if (is_not_default_price)
+        if (is_not_default_price) {
             formed_url = formed_url.concat('&', f_type, '=');
 
-        field_values.forEach( (code) => { if (is_not_default_price)
-            formed_url = formed_url.concat(code, ',');
-        });
+            field_values.forEach( (code) => {
+                formed_url = formed_url.concat(code, ',');
+                post_body.push('Content-Disposition: form-data; name="' + f_type + '[]"\r\n\r\n' + code + '\r\n');
+            });
 
-        if (is_not_default_price)
             formed_url = formed_url.slice(0, -1);
-
-        field_values.forEach( (code) => { if (is_not_default_price)
-            post_body.push('Content-Disposition: form-data; name="' + f_type + '[]"\r\n\r\n' + code + '\r\n');
-        });
+        }
 
         post_data_bundle.body = post_body;
         post_data_bundle.url = formed_url;

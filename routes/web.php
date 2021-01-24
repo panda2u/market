@@ -22,6 +22,8 @@ Route::get('/', function () {
 });
 */
 
+Route::get('/wipe', 'App\Http\Controllers\MainController@wipe')->name('wipe');
+
 Route::get('/', 'App\Http\Controllers\MainController@index')->name('home');
 
 Route::get('catalog', 'App\Http\Controllers\MainController@catalog')->name('catalog');

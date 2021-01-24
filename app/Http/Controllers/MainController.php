@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Filesystem\Filesystem;
 
 class MainController extends Controller
 {
@@ -105,6 +107,12 @@ class MainController extends Controller
         ]);
     }
 
+    public function wipe() {
+        if (Auth::check()) {
+            Artisan::call('migrate:refresh --seed');
+        }
+    }
+
     public function index(Request $request) {
         $path = $request->session()->pull('path', 'default');
         return view('home')->with('path', $path != 'default' ? $path : null);
@@ -153,10 +161,12 @@ class MainController extends Controller
         } else return redirect('login');
     }
 
-    public function catalog($goods = null) { // GET
-        if ($goods == null) {$goods = Good::OrderBy('id')->simplePaginate(10);}
+    public function catalog($goods = null, $url = 'catalog') { // GET
+        if ($goods == null) {$goods = Good::OrderBy('id');}
         return view('catalog', [
-            'goods' => $goods,
+	    'files' => '',
+            'goods' => $goods->simplePaginate(6),
+            'url' => $url,
             'materials' => Material::all(),
             'sizes' => Size::all(),
             'attached_materials' => \App\Models\Material::has('goods')->pluck('id')->toArray(),
@@ -202,7 +212,8 @@ class MainController extends Controller
                 ]) );
             $goods = collect($goods_with_prices)->flatten()->unique('id');
         }
-        //$goods = collect($goods)->flatten()->unique('id');
+        
+        $goods = $goods == [] ? Good::with('sizes')->get() : collect($goods)->flatten()->unique('id');
         return $goods;
     }
 
@@ -216,19 +227,24 @@ class MainController extends Controller
         $attached_sizes = \App\Models\Size::has('goods')->pluck('id')->toArray();
 
         if (!array_key_exists('razmer', $bundle) && !array_key_exists('tkan', $bundle)
-            && !array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)) {
+            && !array_key_exists('priceFrom', $bundle) && !array_key_exists('priceTo', $bundle)
+            && !array_key_exists('page', $bundle)) {
             return redirect()->route('catalog', ['goods' => Good::get()->all()]);
         }
         else {
-            $goods_to_display = Good::WhereIn('id', $this->get_filtered($bundle)->pluck('id'))->simplePaginate(6);
+            $goods_to_display = Good::WhereIn('id', $this->get_filtered($bundle)->pluck('id'));
         }
 
-        if ($goods_to_display == []) {
-            $goods_to_display = Good::simplePaginate(10);        /* show all, nothing to hide */
-        }
+	$pageNumber = array_values($request->all('page'))[0] != null ?
+	    array_values($request->all('page'))[0][0] : false;
+	        
+	$goods_to_display = $pageNumber ?
+	    $goods_to_display->simplePaginate(6, ['*'], 'page', $pageNumber) :
+        $goods_to_display->simplePaginate(6);
 
         return view('catalog', [
             'goods' => $goods_to_display,
+            'url' => $request->url,
             'materials' => $materials,
             'sizes' => $sizes,
             'attached_materials' => $attached_materials,
@@ -295,14 +311,14 @@ class MainController extends Controller
             $dimensions = getimagesize($file_temp)[0].'x'.getimagesize($file_temp)[1];
             $loaded_file = $this->sanitize_name($_FILES['image']['name']);
             $file_mime = str_replace('/', '.',
-                substr(getimagesize($file_temp)['mime'], strrpos($file_temp, '/') + 1));
+                substr(getimagesize($file_temp)['mime'], strrpos(getimagesize($file_temp)['mime'], '/')));
         }
 
         if (isset($dimensions) && $dimensions != null) {
             $good_image = $dt.$code.$dimensions.$file_mime;
             if (!$is_create && $good->image != '') { $this->delete_image($good->id); }
-            $image_path = $request->file('image')->storeAs('uploads', $good_image, ['disk' => 'public']);
-            $good->image = 'storage/'.$image_path;
+            $image_path = $request->file('image')->store($good_image, ['disk' => 'public']);
+            $good->image = $good_image;
         }
         $good->save();
 

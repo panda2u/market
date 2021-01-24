@@ -296,3 +296,43 @@ svg:not(:root) {
     font-weight: bold;
     margin-top: 5px;
 }
+/**/
+
+.form {
+    max-width: 80%;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.index-id {
+    width: 6em;
+    max-width: 6em;
+}
+
+.small-button {
+    width: 6.2em;
+    max-width: 6.2em;
+    height: 2em;
+    max-height: 2em;
+}
+
+.padding-0 {
+    padding: 0px;
+}
+
+.mw-6em {
+    width: 6em;
+    max-width: 6em;
+}
+
+.mw-15em {
+    width: 15em;
+    max-width: 15em;
+}
+
+.wrapper {
+    min-height: 90vh;
+}
