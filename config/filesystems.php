@@ -50,7 +50,7 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => \Illuminate\Support\Facades\App::basePath().'/public_html/uploads',
+            'root' => base_path().'/public_html/uploads',
             'url' => env('APP_URL').'/uploads',
             'visibility' => 'public',
 	    'permissions' => [

@@ -235,12 +235,12 @@ class MainController extends Controller
             $goods_to_display = Good::WhereIn('id', $this->get_filtered($bundle)->pluck('id'));
         }
 
-	$pageNumber = array_values($request->all('page'))[0] != null ?
-	    array_values($request->all('page'))[0][0] : false;
+	    $pageNumber = array_values($request->all('page'))[0] != null ?
+            array_values($request->all('page'))[0][0] : false;
 	        
-	$goods_to_display = $pageNumber ?
+	    $goods_to_display = $pageNumber ?
 	    $goods_to_display->simplePaginate(6, ['*'], 'page', $pageNumber) :
-        $goods_to_display->simplePaginate(6);
+            $goods_to_display->simplePaginate(6);
 
         return view('catalog', [
             'goods' => $goods_to_display,
@@ -317,7 +317,7 @@ class MainController extends Controller
         if (isset($dimensions) && $dimensions != null) {
             $good_image = $dt.$code.$dimensions.$file_mime;
             if (!$is_create && $good->image != '') { $this->delete_image($good->id); }
-            $image_path = $request->file('image')->store($good_image, ['disk' => 'public']);
+            $image_path = $request->file('image')->storeAs('/', $good_image, ['disk' => 'public']);
             $good->image = $good_image;
         }
         $good->save();

@@ -14,7 +14,7 @@
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.12",
         "laravel/tinker": "^2.5",
-        "ext-intl": "^*"
+        "ext-intl": "^8"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
@@ -30,7 +30,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+            "laravel/dusk"
+            ]
         }
     },
     "autoload": {
