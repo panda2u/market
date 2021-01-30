@@ -15,6 +15,8 @@ use Illuminate\Support;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Filesystem\Filesystem;
+use App\Services\GoodService;
+use App\Services\ImageService;
 
 class MainController extends Controller
 {
@@ -77,12 +79,8 @@ class MainController extends Controller
         }
     }
 
-    public function delete_image ($good_id) { // storage disk
-        $good = Good::where('id', $good_id)->first();
-        $path = str_replace('storage/', '', $good->image);
-        Storage::disk('public')->delete($path);
-        $good->image = '';
-        $good->save();
+    public function delete_image($good_id) { // storage disk
+        (new ImageService())->delete_image($good_id);
     }
 
     public function sanitize_name($input_val) {
@@ -316,7 +314,7 @@ class MainController extends Controller
 
         if (isset($dimensions) && $dimensions != null) {
             $good_image = $dt.$code.$dimensions.$file_mime;
-            if (!$is_create && $good->image != '') { $this->delete_image($good->id); }
+            if (!$is_create && $good->image != '') { (new ImageService())->delete_image($good->id); }
             $image_path = $request->file('image')->storeAs('/', $good_image, ['disk' => 'public']);
             $good->image = $good_image;
         }
@@ -349,12 +347,8 @@ class MainController extends Controller
     }
 
     public function delete_good ($good_id) { // POST
-        $good = Good::where('id', $good_id)->first();
-        $this->delete_image($good->id);
-        // relationships
-        $good->materials()->detach();
-        $good->sizes()->detach();
-        $good->delete();
+        (new GoodService())->delete_good($good_id);
+
         return redirect()->route('dashboard');
     }
 
