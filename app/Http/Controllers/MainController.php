@@ -79,8 +79,8 @@ class MainController extends Controller
         }
     }
 
-    public function delete_image($good_id) { // storage disk
-        (new ImageService())->delete_image($good_id);
+    public function delete_image(ImageService $image_service, $good_id) { // storage disk
+        $image_service->delete_image($good_id);
     }
 
     public function sanitize_name($input_val) {
@@ -346,9 +346,8 @@ class MainController extends Controller
         return $this->do_create_update_good($request, $good_id);
     }
 
-    public function delete_good ($good_id) { // POST
-        (new GoodService())->delete_good($good_id);
-
+    public function delete_good (GoodService $good_service, $good_id) { // POST
+        $good_service->delete_good($good_id);
         return redirect()->route('dashboard');
     }
 
